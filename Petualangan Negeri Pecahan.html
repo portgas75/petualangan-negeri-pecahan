@@ -1,0 +1,1922 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Petualangan Negeri Pecahan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@600;700;800&display=swap">
+<style>
+/* Konsep tata letak: peta petualangan bergaya buku cerita; satu layar = satu tugas.
+   Game memakai satu tampilan cerah (sengaja tunggal, bukan tema gelap/terang). */
+:root {
+  color-scheme: light;
+  --ink: #2a2750;
+  --ink-soft: #5d5a8a;
+  --paper: #ffffff;
+  --sky-top: #b9e3ff;
+  --sky-bot: #eaf8ff;
+  --hill-a: #bdeccb;
+  --hill-b: #9fe0b6;
+
+  --sun: #ffb000;       --sun-deep: #d68500;
+  --coral: #ff6b6b;     --coral-deep: #d24747;
+  --grass: #2fc476;     --grass-deep: #1b9a58;
+  --ocean: #3b8cff;     --ocean-deep: #2767c7;
+  --grape: #7b5cff;     --grape-deep: #5a3fd1;
+
+  --peach: #ffe1cf; --mint: #cff5df; --sky: #d3eaff; --lemon: #fff3b0; --lilac: #e5dcff; --pink: #ffd5e5;
+  --line: #e4e1f5;
+
+  --font-display: 'Baloo 2', 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --font-body: 'Nunito', 'Segoe UI', system-ui, sans-serif;
+  --radius: 22px;
+  --shadow: 0 10px 0 rgba(42, 39, 80, .10), 0 18px 30px rgba(42, 39, 80, .10);
+}
+* { box-sizing: border-box; }
+html, body { height: auto; }
+body {
+  margin: 0; background: var(--sky-bot); color: var(--ink);
+  font-family: var(--font-body); font-size: 17px; font-weight: 700; line-height: 1.45;
+  padding-block: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  min-height: 100vh; overflow-x: hidden; -webkit-tap-highlight-color: transparent;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 4px solid var(--grape); outline-offset: 3px; border-radius: 12px; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.1; margin: 0; text-wrap: balance; }
+p { margin: 0; }
+b, strong { font-weight: 800; }
+
+/* ---------- Latar langit ---------- */
+.sky { position: fixed; inset: 0; z-index: -1; background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-bot) 62%, #f4fff0 100%); overflow: hidden; }
+.cloud { position: absolute; width: 150px; height: 46px; background: #fff; border-radius: 40px; opacity: .85; animation: drift 60s linear infinite; }
+.cloud::before, .cloud::after { content: ""; position: absolute; background: #fff; border-radius: 50%; }
+.cloud::before { width: 64px; height: 64px; left: 22px; top: -30px; }
+.cloud::after { width: 48px; height: 48px; left: 74px; top: -20px; }
+.cloud.c1 { top: 8%; left: -200px; animation-duration: 70s; }
+.cloud.c2 { top: 24%; left: -200px; animation-duration: 95s; animation-delay: -40s; transform: scale(.7); }
+.cloud.c3 { top: 14%; left: -200px; animation-duration: 120s; animation-delay: -80s; transform: scale(1.15); opacity: .7; }
+@keyframes drift { to { transform: translateX(calc(100vw + 400px)) scale(var(--s, 1)); } }
+.hills { position: absolute; left: 0; right: 0; bottom: 0; height: 26vh; min-height: 140px; }
+.hills::before, .hills::after { content: ""; position: absolute; bottom: -40px; border-radius: 50% 50% 0 0; }
+.hills::before { left: -10%; width: 70%; height: 100%; background: var(--hill-a); }
+.hills::after { right: -12%; width: 70%; height: 82%; background: var(--hill-b); }
+
+/* ---------- Kerangka aplikasi ---------- */
+#app { max-width: 1040px; margin: 0 auto; padding-block: 14px 48px; display: flex; flex-direction: column; gap: 14px; min-height: 100vh; }
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.toolbar .grow { flex: 1; }
+.pill { display: inline-flex; align-items: center; gap: 8px; background: var(--paper); border-radius: 999px; padding: 6px 14px 6px 8px; font-family: var(--font-display); font-weight: 700; font-size: 18px; box-shadow: 0 4px 0 rgba(42, 39, 80, .10); min-height: 44px; }
+.pill .ico { width: 30px; height: 30px; }
+.round-btn { width: 48px; height: 48px; border-radius: 50%; border: 0; background: var(--paper); box-shadow: 0 5px 0 rgba(42, 39, 80, .14); display: grid; place-items: center; transition: transform .1s, box-shadow .1s; padding: 0; }
+.round-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(42, 39, 80, .14); }
+.round-btn svg { width: 26px; height: 26px; }
+.round-btn.off { opacity: .55; }
+.screen { animation: pop-in .35s ease both; }
+@keyframes pop-in { from { opacity: 0; transform: translateY(14px) scale(.98); } to { opacity: 1; transform: none; } }
+
+/* ---------- Tombol besar ---------- */
+.btn { --c: var(--sun); --cd: var(--sun-deep); --tc: #3a2500;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 58px; padding: 10px 28px;
+  border: 0; border-radius: 20px; background: var(--c); color: var(--tc); font-family: var(--font-display); font-weight: 800; font-size: 22px;
+  box-shadow: 0 7px 0 var(--cd); transition: transform .1s, box-shadow .1s, filter .15s; text-decoration: none; }
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--cd); }
+.btn[disabled] { filter: grayscale(.9) opacity(.55); cursor: not-allowed; transform: none; box-shadow: 0 7px 0 #9a98b8; }
+.btn.green { --c: var(--grass); --cd: var(--grass-deep); --tc: #fff; }
+.btn.blue { --c: var(--ocean); --cd: var(--ocean-deep); --tc: #fff; }
+.btn.grape { --c: var(--grape); --cd: var(--grape-deep); --tc: #fff; }
+.btn.coral { --c: var(--coral); --cd: var(--coral-deep); --tc: #fff; }
+.btn.ghost { --c: #fff; --cd: #cfcbe8; --tc: var(--ink); }
+.btn.small { min-height: 46px; font-size: 18px; padding: 6px 18px; border-radius: 16px; box-shadow: 0 5px 0 var(--cd); }
+.btn.block { width: 100%; }
+.btn svg { width: 28px; height: 28px; flex: none; }
+
+/* ---------- Kartu ---------- */
+.card { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; }
+.card.tint-peach { background: var(--peach); } .card.tint-mint { background: var(--mint); } .card.tint-sky { background: var(--sky); }
+.card.tint-lemon { background: var(--lemon); } .card.tint-lilac { background: var(--lilac); } .card.tint-pink { background: var(--pink); }
+.title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.title-row h2 { font-size: clamp(28px, 5vw, 40px); }
+.sub { color: var(--ink-soft); }
+
+/* ---------- Pecahan bertumpuk ---------- */
+.fr { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle; line-height: 1.05; margin: 0 .14em; font-family: var(--font-display); font-weight: 800; font-size: 1.12em; }
+.fr > span:first-child { border-bottom: .11em solid currentColor; padding: 0 .22em .04em; min-width: 1.1em; text-align: center; }
+.fr > span:last-child { padding-top: .04em; }
+.op { margin: 0 .22em; font-family: var(--font-display); font-weight: 800; }
+.whole { font-family: var(--font-display); font-size: 1.1em; }
+.fr-big { font-size: 1.5em; margin: 10px 0; display: block; }
+.symbig { font-family: var(--font-display); font-size: 1.7em; font-weight: 800; }
+
+/* ---------- Ilustrasi ---------- */
+.vis { display: block; margin: 0 auto; overflow: visible; }
+.vis .ring { fill: none; stroke: var(--ink); stroke-width: 3; opacity: .85; }
+.vis .cell .fillA { fill: var(--off); stroke: var(--line-c); stroke-width: 2; transition: fill .15s, transform .15s; }
+.vis-pizza { --off: #fff6dc; --on: #ffb62e; --line-c: #e3a64a; }
+.vis-cake { --off: #fff0f6; --on: #ff8fb8; --line-c: #e0568e; }
+.vis-choc { --off: #f3e4d6; --on: #7a4a2b; --line-c: #bfa58b; }
+.vis-bar { --off: #eaf6ff; --on: #3fa7ff; --line-c: #7cbcee; }
+.vis-fruit { --off: #7ed957; --on: #ff5a5f; --line-c: rgba(0,0,0,.18); }
+.vis .cell.on .fillA { fill: var(--on); }
+.vis-pizza .cell .topping { fill: transparent; }
+.vis-pizza .cell.on .topping { fill: #d8402f; stroke: #a82a1d; stroke-width: 1.5; }
+.vis-pizza .cell:not(.on) .fillA { stroke-dasharray: 5 4; }
+.vis-cake .cell .icing { fill: #fff; opacity: .9; } .vis-cake .cell .cherry { fill: transparent; }
+.vis-cake .cell.on .cherry { fill: #e8344f; } .vis-cake .plate { fill: #d9d4f0; }
+.vis-choc .cell .shine { fill: rgba(255,255,255,.18); } .vis-choc .cell:not(.on) .shine { fill: rgba(255,255,255,.55); }
+.vis-fruit .stem { fill: none; stroke: #5b3a1e; stroke-width: 3; stroke-linecap: round; }
+.vis-fruit .leaf { fill: #2e9e4d; } .vis-fruit .shine2 { fill: rgba(255,255,255,.6); }
+.vis-click .cell { cursor: pointer; }
+.vis-click .cell:hover .fillA { transform: scale(1.02); transform-box: fill-box; transform-origin: center; filter: brightness(1.05); }
+.vis-click .cell:not(.on) .fillA { stroke-dasharray: 6 4; }
+.stack-bars { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.sb-row { display: flex; align-items: center; gap: 14px; }
+.sb-label { width: 56px; text-align: center; font-size: 20px; }
+.eq-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.eq-op { font-family: var(--font-display); font-size: 40px; font-weight: 800; }
+.cmp-line { display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 32px; margin-top: 12px; }
+.cmp-q { width: 54px; height: 54px; border-radius: 16px; background: var(--lemon); display: grid; place-items: center; font-family: var(--font-display); border: 3px dashed var(--sun-deep); }
+
+/* ---------- Maskot ---------- */
+.mascot { display: block; overflow: visible; }
+.mascot .m-shadow { fill: rgba(42, 39, 80, .14); }
+.mascot .m-body { fill: #4aa8ff; } .mascot .m-pack { fill: #ff8a3d; }
+.mascot .m-face { fill: #ffd9b8; stroke: #e9b88c; stroke-width: 2; }
+.mascot .m-cheek { fill: #ff9ab5; opacity: .7; }
+.mascot .eye { fill: var(--ink); } .mascot .eyeline, .mascot .brow { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
+.mascot .mouth { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
+.mascot .mouth.open { fill: #8a2840; stroke: var(--ink); stroke-linejoin: round; } .mascot .tongue { fill: none; stroke: #ff8aa0; stroke-width: 3; stroke-linecap: round; }
+.mascot .m-hat { fill: #2fc476; } .mascot .m-brim { fill: #1b9a58; } .mascot .m-pom { fill: var(--sun); } .mascot .m-band { stroke: #fff3b0; stroke-width: 5; stroke-linecap: round; }
+.mascot .m-pie-a { fill: #fff3b0; stroke: var(--ink); stroke-width: 2; } .mascot .m-pie-b { fill: var(--coral); stroke: var(--ink); stroke-width: 2; }
+.mascot-cheer { animation: hop .7s ease-in-out infinite; }
+.mascot-happy { animation: bob 2.4s ease-in-out infinite; }
+@keyframes hop { 50% { transform: translateY(-14px) rotate(-3deg); } }
+@keyframes bob { 50% { transform: translateY(-6px); } }
+
+/* ---------- Menu utama ---------- */
+.menu { display: grid; grid-template-columns: 1.1fr .9fr; gap: 20px; align-items: center; padding-top: 8px; }
+.menu-hero { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.kicker { display: inline-flex; align-self: flex-start; background: var(--paper); border-radius: 999px; padding: 6px 16px; font-family: var(--font-display); font-weight: 700; color: var(--grape-deep); box-shadow: 0 4px 0 rgba(42,39,80,.10); letter-spacing: .04em; }
+.game-title { font-size: clamp(40px, 7.4vw, 84px); font-weight: 800; letter-spacing: -.01em; color: var(--ink); text-shadow: 0 5px 0 #fff, 0 9px 0 rgba(42,39,80,.12); }
+.game-title .w2 { color: var(--coral); display: block; }
+.game-title .w3 { color: var(--ocean); display: block; }
+.menu-btns { display: grid; gap: 14px; max-width: 420px; }
+.menu-stats { display: flex; gap: 10px; flex-wrap: wrap; }
+.menu-art { position: relative; display: grid; place-items: center; min-height: 340px; }
+.menu-art .blob { position: absolute; inset: 6% 4%; background: var(--lemon); border-radius: 46% 54% 52% 48% / 50% 44% 56% 50%; box-shadow: inset 0 -14px 0 rgba(255,176,0,.25); }
+.menu-art .mascot-wrap { position: relative; z-index: 1; }
+.float-vis { position: absolute; z-index: 2; filter: drop-shadow(0 6px 0 rgba(42,39,80,.12)); animation: bob 3.4s ease-in-out infinite; }
+.float-vis.v1 { left: 2%; top: 4%; width: 120px; } .float-vis.v2 { right: 0; top: 14%; width: 112px; animation-delay: -1.2s; } .float-vis.v3 { right: 8%; bottom: 4%; width: 130px; animation-delay: -2s; }
+
+/* ---------- Panduan ---------- */
+.guide-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 14px; }
+.guide-step { display: flex; gap: 14px; align-items: flex-start; }
+.guide-step .gnum { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; font-size: 24px; background: var(--sun); color: #3a2500; box-shadow: 0 4px 0 var(--sun-deep); }
+.guide-step h3 { font-size: 22px; margin-bottom: 4px; }
+.score-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.score-table td, .score-table th { padding: 10px 8px; text-align: left; border-bottom: 2px dashed var(--line); }
+.score-table th { font-family: var(--font-display); }
+.action-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
+
+/* ---------- Peta level ---------- */
+.progress-wrap { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 220px; }
+.progress { height: 20px; background: rgba(255,255,255,.8); border-radius: 999px; overflow: hidden; box-shadow: inset 0 3px 0 rgba(42,39,80,.10); }
+.progress > i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, var(--grass), #7be3a6); border-radius: 999px; transition: width .6s ease; }
+.map { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px 18px; margin-top: 8px; padding-bottom: 20px; }
+.region { position: relative; text-align: left; border: 0; border-radius: 26px; padding: 16px 16px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 250px; box-shadow: 0 9px 0 rgba(42,39,80,.14), 0 18px 28px rgba(42,39,80,.10); transition: transform .12s, box-shadow .12s; background: var(--tint, var(--sky)); color: var(--ink); }
+.region:nth-child(3n+2) { transform: translateY(18px); }
+.region:not([disabled]):hover { transform: translateY(-4px); }
+.region:nth-child(3n+2):not([disabled]):hover { transform: translateY(14px); }
+.region[disabled] { cursor: not-allowed; filter: saturate(.35) brightness(1.02); }
+.region .rnum { position: absolute; top: -14px; left: 14px; background: var(--ink); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 24px; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; border: 4px solid #fff; }
+.region .rart { height: 92px; display: grid; place-items: center; }
+.region h3 { font-size: 23px; }
+.region .rreg { font-size: 15px; color: var(--ink-soft); }
+.region .rtopic { font-size: 15px; color: var(--ink-soft); font-weight: 700; flex: 1; }
+.stars { display: inline-flex; gap: 2px; } .stars svg { width: 30px; height: 30px; }
+.star-off { fill: rgba(42,39,80,.15); } .star-on { fill: #ffc21a; stroke: #d68500; stroke-width: 1.5; stroke-linejoin: round; }
+.lock { position: absolute; right: 14px; top: 14px; width: 40px; height: 40px; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+.lock svg { width: 22px; height: 22px; }
+.region .rstate { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 700; }
+.region .go { background: #fff; border-radius: 999px; padding: 2px 12px; font-size: 16px; }
+.region.current { outline: 5px solid var(--sun); outline-offset: 3px; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { outline-color: #ffe08a; } }
+
+/* ---------- Materi (lesson) ---------- */
+.lesson { display: grid; gap: 14px; }
+.lesson-card { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; align-items: center; min-height: 300px; }
+.lesson-card h3 { font-size: clamp(26px, 4.4vw, 36px); margin-bottom: 10px; }
+.lesson-text { font-size: 20px; }
+.lesson-art { display: grid; place-items: center; gap: 10px; text-align: center; min-width: 0; }
+.lesson-art:empty { display: none; }
+.lesson-card.solo { grid-template-columns: 1fr; }
+.lesson-card .mascot-side { display: grid; place-items: center; }
+.cap { font-family: var(--font-display); font-weight: 700; font-size: 20px; }
+.tips { margin: 8px 0 0; padding-left: 22px; display: grid; gap: 6px; }
+.dots { display: flex; gap: 8px; justify-content: center; }
+.dots i { width: 14px; height: 14px; border-radius: 50%; background: rgba(42,39,80,.2); transition: all .2s; }
+.dots i.on { background: var(--grape); width: 36px; border-radius: 8px; }
+.lesson-nav { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- Bermain ---------- */
+.hud { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; }
+.hud-mid { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.hud-title { font-family: var(--font-display); font-weight: 800; font-size: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qdots { display: flex; gap: 6px; flex-wrap: wrap; }
+.qdots i { flex: 1; min-width: 18px; max-width: 54px; height: 14px; border-radius: 8px; background: rgba(255,255,255,.85); box-shadow: inset 0 2px 0 rgba(42,39,80,.10); }
+.qdots i.ok { background: var(--grass); } .qdots i.bad { background: var(--coral); } .qdots i.now { background: var(--sun); animation: pulse2 1s ease-in-out infinite; }
+@keyframes pulse2 { 50% { transform: scaleY(1.5); } }
+.hud-right { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+.score-pill b { font-size: 24px; display: inline-block; min-width: 2ch; text-align: right; font-variant-numeric: tabular-nums; }
+.score-pill.bump { animation: bump .5s ease; }
+@keyframes bump { 40% { transform: scale(1.18); background: var(--lemon); } }
+.qcard { padding: 24px; display: flex; flex-direction: column; gap: 16px; }
+.qhead { display: flex; align-items: center; gap: 12px; color: var(--ink-soft); font-family: var(--font-display); font-weight: 700; }
+.qtype { background: var(--lilac); color: var(--grape-deep); border-radius: 999px; padding: 2px 14px; font-size: 16px; }
+.qprompt { font-size: clamp(21px, 3.2vw, 28px); line-height: 1.5; }
+.qvisual { display: grid; place-items: center; padding: 8px 0; }
+.qvisual:empty { display: none; }
+.answers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.answers.row { grid-template-columns: repeat(3, 1fr); }
+.opt { min-height: 84px; border: 4px solid var(--line); border-radius: 20px; background: #fff; font-size: 26px; display: grid; place-items: center; padding: 10px; transition: transform .1s, border-color .15s, background .15s; box-shadow: 0 5px 0 var(--line); }
+.opt:hover { border-color: var(--ocean); }
+.opt:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--line); }
+.opt.sel { border-color: var(--ocean); background: #e6f1ff; box-shadow: 0 5px 0 var(--ocean); }
+.opt.right { border-color: var(--grass); background: #dcf8e8; box-shadow: 0 5px 0 var(--grass); }
+.opt.wrong { border-color: var(--coral); background: #ffe3e3; box-shadow: 0 5px 0 var(--coral); animation: shake .4s; }
+.opt[disabled] { cursor: default; }
+@keyframes shake { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+.fill-area { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+.num-in { width: 110px; height: 66px; text-align: center; font-family: var(--font-display); font-weight: 800; font-size: 34px; border: 4px solid var(--line); border-radius: 18px; background: #fff; box-shadow: inset 0 4px 0 rgba(42,39,80,.06); }
+.num-in:focus { border-color: var(--ocean); outline: none; box-shadow: 0 0 0 5px rgba(59,140,255,.25); }
+.num-in.inline { width: 76px; height: 54px; font-size: 28px; vertical-align: middle; margin: 0 4px; }
+.num-in.ok { border-color: var(--grass); background: #dcf8e8; } .num-in.bad { border-color: var(--coral); background: #ffe3e3; }
+.frin { display: inline-flex; flex-direction: column; align-items: center; gap: 6px; }
+.frin .bar { width: 100%; height: 6px; background: var(--ink); border-radius: 4px; }
+.frin-label { color: var(--ink-soft); font-size: 15px; }
+.unit-label { font-family: var(--font-display); font-size: 22px; }
+.match { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 40px; }
+.match-col { display: grid; gap: 12px; align-content: start; }
+.mitem { min-height: 78px; border: 4px solid var(--line); border-radius: 18px; background: #fff; display: grid; place-items: center; padding: 6px; font-size: 24px; box-shadow: 0 5px 0 var(--line); position: relative; }
+.mitem.pick { border-color: var(--ocean); background: #e6f1ff; }
+.mitem[data-c] { border-color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, #fff); box-shadow: 0 5px 0 var(--pc); }
+.mitem .tag { position: absolute; top: -12px; right: -10px; width: 28px; height: 28px; border-radius: 50%; background: var(--pc); color: #fff; font-size: 15px; display: grid; place-items: center; font-family: var(--font-display); }
+.mitem.right { border-color: var(--grass); background: #dcf8e8; box-shadow: 0 5px 0 var(--grass); } .mitem.wrong { border-color: var(--coral); background: #ffe3e3; box-shadow: 0 5px 0 var(--coral); }
+.order-zone { display: grid; gap: 12px; }
+.order-tray { display: flex; gap: 10px; flex-wrap: wrap; min-height: 96px; padding: 12px; border-radius: 20px; background: var(--lemon); border: 4px dashed var(--sun-deep); align-items: center; }
+.order-tray .hint { color: var(--ink-soft); font-size: 16px; }
+.order-bank { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.ocard { min-width: 84px; min-height: 84px; padding: 6px 14px; border: 4px solid var(--line); border-radius: 18px; background: #fff; font-size: 26px; display: grid; place-items: center; position: relative; box-shadow: 0 5px 0 var(--line); }
+.ocard:hover { border-color: var(--ocean); } .ocard.placed { border-color: var(--grape); background: #efe9ff; box-shadow: 0 5px 0 var(--grape); }
+.ocard .tag { position: absolute; top: -12px; left: -10px; width: 28px; height: 28px; border-radius: 50%; background: var(--grape); color: #fff; font-size: 15px; display: grid; place-items: center; font-family: var(--font-display); }
+.ocard.right { border-color: var(--grass); background: #dcf8e8; } .ocard.wrong { border-color: var(--coral); background: #ffe3e3; }
+.shade-note { text-align: center; color: var(--ink-soft); }
+.q-actions { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- Umpan balik ---------- */
+.overlay { position: fixed; inset: 0; z-index: 50; background: rgba(42,39,80,.45); display: grid; place-items: center; padding: 16px max(16px, env(safe-area-inset-left, 0px)) max(16px, env(safe-area-inset-bottom, 0px)); animation: fade .2s ease; overflow-y: auto; }
+@keyframes fade { from { opacity: 0; } }
+.sheet { width: min(640px, 100%); background: #fff; border-radius: 28px; padding: 24px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 14px 0 rgba(42,39,80,.18); animation: sheet-in .35s cubic-bezier(.2,1.2,.4,1) both; max-height: calc(100vh - 32px); overflow-y: auto; }
+@keyframes sheet-in { from { transform: translateY(60px) scale(.92); opacity: 0; } }
+.sheet.good { border-top: 14px solid var(--grass); } .sheet.bad { border-top: 14px solid var(--sun); }
+.fb-head { display: flex; gap: 14px; align-items: center; }
+.fb-head h3 { font-size: clamp(28px, 5vw, 38px); }
+.fb-head .plus { color: var(--grass-deep); font-family: var(--font-display); font-weight: 800; font-size: 26px; }
+.fb-box { background: var(--lemon); border-radius: 18px; padding: 14px 16px; font-size: 18px; line-height: 1.7; }
+.fb-box .label { display: block; font-family: var(--font-display); color: var(--sun-deep); margin-bottom: 2px; }
+.fb-ans { display: inline-flex; align-items: center; gap: 8px; background: #dcf8e8; border-radius: 14px; padding: 2px 14px; margin-left: 6px; }
+.sheet.good .fb-box { background: #dcf8e8; } .sheet.good .fb-box .label { color: var(--grass-deep); }
+.confetti { position: fixed; top: -20px; width: 12px; height: 18px; z-index: 60; pointer-events: none; animation: fall 1.6s ease-in forwards; }
+@keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: .9; } }
+
+/* ---------- Hasil ---------- */
+.result { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.result h2 { font-size: clamp(30px, 6vw, 48px); }
+.big-stars { display: flex; gap: 8px; justify-content: center; }
+.big-stars svg { width: clamp(70px, 18vw, 110px); height: auto; transform: scale(.4) rotate(-20deg); opacity: 0; }
+.big-stars svg.in { animation: star-in .6s cubic-bezier(.2,1.6,.4,1) forwards; }
+@keyframes star-in { to { transform: none; opacity: 1; } }
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; width: 100%; }
+.stat { background: var(--sky); border-radius: 18px; padding: 12px; } .stat b { display: block; font-family: var(--font-display); font-size: 34px; line-height: 1.1; } .stat span { color: var(--ink-soft); font-size: 15px; }
+.new-badges { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.trophy-card { width: 100%; background: linear-gradient(135deg, #fff3b0, #ffd5e5); border-radius: 24px; padding: 18px; display: grid; gap: 6px; justify-items: center; border: 5px solid #ffc21a; }
+.trophy-card h3 { font-size: 30px; color: var(--sun-deep); }
+
+/* ---------- Rekap & badge ---------- */
+.recap-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-top: 14px; }
+.recap-tiles .stat { background: #fff; box-shadow: 0 6px 0 rgba(42,39,80,.10); }
+.table-wrap { overflow-x: auto; }
+.recap-table { width: 100%; border-collapse: collapse; min-width: 480px; }
+.recap-table th, .recap-table td { padding: 10px 8px; text-align: left; border-bottom: 2px dashed var(--line); }
+.recap-table th { font-family: var(--font-display); }
+.recap-table .stars svg { width: 24px; height: 24px; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-top: 10px; }
+.badge { display: flex; gap: 12px; align-items: center; background: #fff; border-radius: 18px; padding: 10px 12px; box-shadow: 0 5px 0 rgba(42,39,80,.10); }
+.badge .medal { flex: none; width: 54px; height: 54px; border-radius: 50%; display: grid; place-items: center; background: var(--lemon); border: 4px solid #ffc21a; }
+.badge .medal svg { width: 28px; height: 28px; }
+.badge.locked { filter: grayscale(1); opacity: .55; }
+.badge b { display: block; font-family: var(--font-display); font-size: 17px; line-height: 1.15; } .badge small { color: var(--ink-soft); font-size: 13px; line-height: 1.2; display: block; }
+.confirm { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 12px 22px; border-radius: 999px; z-index: 70; font-family: var(--font-display); animation: sheet-in .3s ease both; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 860px) {
+  .menu { grid-template-columns: 1fr; } .menu-art { min-height: 260px; order: -1; }
+  .map { grid-template-columns: repeat(2, 1fr); } .region:nth-child(3n+2) { transform: none; } .region:nth-child(even) { transform: translateY(14px); }
+  .region:not([disabled]):nth-child(even):hover { transform: translateY(10px); }
+  .lesson-card { grid-template-columns: 1fr; } .match { gap: 12px 18px; }
+}
+.region .rart > svg.vis-pizza { height: 100%; width: auto !important; }
+@media (max-width: 480px) {
+  .toolbar { gap: 6px; flex-wrap: nowrap; }
+  .toolbar .pill { padding: 4px 10px 4px 6px; font-size: 16px; min-height: 40px; gap: 5px; }
+  .toolbar .pill .ico { width: 24px; height: 24px; }
+  .toolbar .round-btn { width: 42px; height: 42px; flex: none; }
+}
+@media (max-width: 560px) {
+  body { font-size: 16px; }
+  .map { grid-template-columns: 1fr; gap: 26px; } .region, .region:nth-child(even) { transform: none; min-height: 0; }
+  .region:not([disabled]):hover, .region:not([disabled]):nth-child(even):hover { transform: translateY(-3px); }
+  .region .rart { height: 72px; }
+  .hud { grid-template-columns: 1fr; } .hud-right { justify-content: space-between; }
+  .answers { grid-template-columns: 1fr; } .answers.row { grid-template-columns: repeat(3, 1fr); }
+  .qcard, .card { padding: 16px; } .btn { font-size: 20px; padding: 10px 20px; }
+  .match { grid-template-columns: 1fr 1fr; } .mitem { min-height: 70px; font-size: 20px; }
+  .sb-label { width: 44px; } .float-vis { width: 80px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+  .cloud { display: none; }
+}
+</style>
+<div class="sky" aria-hidden="true"><i class="cloud c1"></i><i class="cloud c2"></i><i class="cloud c3"></i><div class="hills"></div></div>
+<div id="app">
+  <div class="toolbar" id="toolbar"></div>
+  <main id="screen" aria-live="polite"></main>
+</div>
+<div id="overlay-root"></div>
+<noscript>Game ini membutuhkan JavaScript. Silakan aktifkan JavaScript di browser kamu.</noscript>
+<script>
+/* ============================================================
+   PETUALANGAN NEGERI PECAHAN — util: pecahan, acak, penyimpanan
+   ============================================================ */
+'use strict';
+
+const PNP = window.PNP = {};
+
+/* ---------- Matematika pecahan ---------- */
+const gcd = (a, b) => (b ? gcd(b, a % b) : Math.abs(a));
+const lcm = (a, b) => Math.abs(a * b) / gcd(a, b);
+const F = (n, d = 1) => ({ n, d });
+const simp = f => { const g = gcd(f.n, f.d) || 1; return F(f.n / g, f.d / g); };
+const eq = (a, b) => a.n * b.d === b.n * a.d;
+const cmp = (a, b) => Math.sign(a.n * b.d - b.n * a.d);
+const add = (a, b) => simp(F(a.n * b.d + b.n * a.d, a.d * b.d));
+const sub = (a, b) => simp(F(a.n * b.d - b.n * a.d, a.d * b.d));
+const mul = (a, b) => simp(F(a.n * b.n, a.d * b.d));
+const div = (a, b) => simp(F(a.n * b.d, a.d * b.n));
+const val = f => f.n / f.d;
+const isWhole = f => f.n % f.d === 0;
+const fkey = f => { const s = simp(f); return s.n + '/' + s.d; };
+
+/* ---------- Tampilan pecahan (HTML) ---------- */
+const fr = (n, d) => `<span class="fr"><span>${n}</span><span>${d}</span></span>`;
+const frF = f => (f.d === 1 ? `<b class="whole">${f.n}</b>` : fr(f.n, f.d));
+const op = s => `<span class="op">${s}</span>`;
+
+/* ---------- Acak ---------- */
+const rand = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const shuffle = arr => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const sample = (arr, k) => shuffle(arr).slice(0, k);
+
+/* ---------- Penyimpanan (LocalStorage, aman bila diblokir) ---------- */
+const STORE_KEY = 'negeri-pecahan-v1';
+let memoryStore = null;
+
+const defaultSave = () => ({
+  levels: {},          // {1:{stars,best,correct,total,plays}}
+  coins: 0,
+  badges: [],
+  stats: { answered: 0, correct: 0, bestStreak: 0 },
+  settings: { music: true, sfx: true },
+  seenGuide: false
+});
+
+const Save = {
+  data: null,
+  load() {
+    let raw = null;
+    try { raw = window.localStorage.getItem(STORE_KEY); } catch (e) { raw = memoryStore; }
+    let d = defaultSave();
+    try {
+      if (raw) {
+        const p = JSON.parse(raw);
+        d = Object.assign(d, p);
+        d.settings = Object.assign(defaultSave().settings, p.settings || {});
+        d.stats = Object.assign(defaultSave().stats, p.stats || {});
+      }
+    } catch (e) { d = defaultSave(); }
+    this.data = d;
+    return d;
+  },
+  write() {
+    const raw = JSON.stringify(this.data);
+    memoryStore = raw;
+    try { window.localStorage.setItem(STORE_KEY, raw); } catch (e) { /* abaikan */ }
+  },
+  reset() {
+    this.data = defaultSave();
+    this.write();
+  },
+  levelInfo(n) { return this.data.levels[n] || { stars: 0, best: 0, correct: 0, total: 0, plays: 0 }; },
+  isDone(n) { return this.levelInfo(n).stars >= 1; },
+  isUnlocked(n) { return n === 1 || this.isDone(n - 1); },
+  totalScore() { return Object.values(this.data.levels).reduce((s, l) => s + (l.best || 0), 0); },
+  totalStars() { return Object.values(this.data.levels).reduce((s, l) => s + (l.stars || 0), 0); },
+  doneCount() { return [1, 2, 3, 4, 5, 6].filter(n => this.isDone(n)).length; }
+};
+
+/* ---------- Helper DOM ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstChild; };
+/* ============================================================
+   Audio: musik latar & efek suara (WebAudio, tanpa file luar)
+   ============================================================ */
+const Audio_ = PNP.audio = (() => {
+  let ctx = null, master = null, musicGain = null, timer = null, step = 0, playing = false;
+
+  const ensure = () => {
+    if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return ctx; }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return null;
+    try {
+      ctx = new AC();
+      master = ctx.createGain(); master.gain.value = 0.9; master.connect(ctx.destination);
+      musicGain = ctx.createGain(); musicGain.gain.value = 0.0; musicGain.connect(master);
+    } catch (e) { ctx = null; }
+    return ctx;
+  };
+
+  const tone = (freq, t0, dur, type, vol, dest) => {
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(vol, t0 + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(dest || master);
+    o.start(t0); o.stop(t0 + dur + 0.05);
+  };
+
+  const N = { C4: 261.6, D4: 293.7, E4: 329.6, G4: 392, A4: 440, C5: 523.3, D5: 587.3, E5: 659.3, G5: 784, A5: 880, C6: 1046.5, F4: 349.2, B4: 493.9 };
+
+  const sfx = {
+    click() { tone(N.E5, ctx.currentTime, 0.08, 'triangle', 0.18); },
+    correct() {
+      const t = ctx.currentTime;
+      [N.C5, N.E5, N.G5, N.C6].forEach((f, i) => tone(f, t + i * 0.09, 0.25, 'triangle', 0.28));
+    },
+    wrong() {
+      const t = ctx.currentTime;
+      tone(220, t, 0.22, 'sawtooth', 0.14);
+      tone(165, t + 0.18, 0.32, 'sawtooth', 0.14);
+    },
+    star() { const t = ctx.currentTime; [N.G5, N.C6].forEach((f, i) => tone(f, t + i * 0.12, 0.3, 'sine', 0.3)); },
+    win() {
+      const t = ctx.currentTime;
+      [N.C5, N.E5, N.G5, N.C6, N.G5, N.C6].forEach((f, i) => tone(f, t + i * 0.12, 0.35, 'triangle', 0.28));
+    },
+    unlock() { const t = ctx.currentTime; [N.E5, N.A5].forEach((f, i) => tone(f, t + i * 0.1, 0.2, 'square', 0.1)); }
+  };
+
+  // Melodi riang (pentatonik C mayor), 8 ketukan x beberapa pola
+  const melody = [
+    N.C5, N.E5, N.G5, N.E5, N.A5, N.G5, N.E5, N.D5,
+    N.C5, N.D5, N.E5, N.G5, N.E5, N.D5, N.C5, null,
+    N.G4, N.C5, N.E5, N.C5, N.A4, N.C5, N.D5, N.E5,
+    N.G5, N.E5, N.D5, N.C5, N.D5, N.E5, N.C5, null
+  ];
+  const bass = [N.C4, N.C4, N.A4 / 2, N.A4 / 2, N.F4 / 2, N.F4 / 2, N.G4 / 2, N.G4 / 2];
+
+  const tick = () => {
+    if (!ctx || !playing) return;
+    const t = ctx.currentTime + 0.05;
+    const note = melody[step % melody.length];
+    if (note) tone(note, t, 0.28, 'triangle', 0.16, musicGain);
+    if (step % 4 === 0) tone(bass[(step / 4 | 0) % bass.length], t, 0.55, 'sine', 0.2, musicGain);
+    step++;
+  };
+
+  const startMusic = () => {
+    if (!ensure() || playing) return;
+    playing = true;
+    musicGain.gain.cancelScheduledValues(ctx.currentTime);
+    musicGain.gain.setTargetAtTime(0.5, ctx.currentTime, 0.2);
+    timer = setInterval(tick, 260);
+  };
+  const stopMusic = () => {
+    playing = false;
+    clearInterval(timer);
+    if (ctx) musicGain.gain.setTargetAtTime(0.0, ctx.currentTime, 0.1);
+  };
+
+  return {
+    play(name) {
+      if (!Save.data.settings.sfx) return;
+      if (!ensure()) return;
+      try { sfx[name](); } catch (e) { /* abaikan */ }
+    },
+    syncMusic() {
+      if (Save.data.settings.music) startMusic(); else stopMusic();
+    },
+    // dipanggil setelah interaksi pertama (kebijakan autoplay browser)
+    unlock() { ensure(); this.syncMusic(); },
+    isPlaying: () => playing
+  };
+})();
+/* ============================================================
+   Ilustrasi pecahan (SVG): pizza, kue, cokelat, buah, batang
+   Setiap sel punya data-i dan kelas .on bila berwarna (diarsir)
+   ============================================================ */
+const KIND_NAME = { pizza: 'pizza', cake: 'kue', choc: 'cokelat', fruit: 'buah', bar: 'pita' };
+
+const PAL = {
+  pizzaOn: '#ffb62e', pizzaOff: '#fff6dc', pizzaLine: '#d98a1c',
+  cakeOn: '#ff8fb8', cakeOff: '#fff0f6', cakeLine: '#e0568e',
+  chocOn: '#7a4a2b', chocOff: '#f3e4d6', chocLine: '#4e2c16',
+  barOn: '#3fa7ff', barOff: '#eaf6ff', barLine: '#1f6fc2',
+  appleOn: '#ff5a5f', appleOff: '#7ed957'
+};
+
+/* Faktor grid untuk cokelat */
+const gridFor = d => {
+  let best = [1, d];
+  for (let r = 1; r * r <= d; r++) if (d % r === 0) best = [r, d / r];
+  return best; // [baris, kolom]
+};
+
+/* flags: array boolean sepanjang d. opts: {w, interactive} */
+function partsVis(kind, d, flags, opts = {}) {
+  const w = opts.w || 220;
+  const cls = 'vis vis-' + kind + (opts.interactive ? ' vis-click' : '');
+  const cell = (i, inner) =>
+    `<g class="cell${flags[i] ? ' on' : ''}" data-i="${i}" ${opts.interactive ? 'tabindex="0" role="button" aria-label="Bagian ' + (i + 1) + '"' : ''}>${inner}</g>`;
+  let body = '', vb = '0 0 220 220';
+
+  if (kind === 'pizza') {
+    const cx = 110, cy = 110, r = 98;
+    if (d === 1) {
+      body = cell(0, `<circle cx="${cx}" cy="${cy}" r="${r}" class="fillA"/>`);
+    } else {
+      for (let i = 0; i < d; i++) {
+        const a0 = -Math.PI / 2 + (2 * Math.PI * i) / d, a1 = -Math.PI / 2 + (2 * Math.PI * (i + 1)) / d;
+        const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+        const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+        const am = (a0 + a1) / 2, px = cx + r * 0.6 * Math.cos(am), py = cy + r * 0.6 * Math.sin(am);
+        const large = d === 2 ? 0 : 0;
+        body += cell(i,
+          `<path d="M${cx} ${cy} L${x0.toFixed(2)} ${y0.toFixed(2)} A${r} ${r} 0 ${large} 1 ${x1.toFixed(2)} ${y1.toFixed(2)} Z" class="fillA"/>` +
+          `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${Math.max(6, 22 - d)}" class="topping"/>`);
+      }
+    }
+    body += `<circle cx="${cx}" cy="${cy}" r="${r}" class="ring"/>`;
+  }
+
+  if (kind === 'cake') {
+    vb = '0 0 220 150';
+    const x0 = 10, wBox = 200, y0 = 40, hBox = 90, cw = wBox / d;
+    for (let i = 0; i < d; i++) {
+      const x = x0 + i * cw;
+      body += cell(i,
+        `<rect x="${x.toFixed(2)}" y="${y0}" width="${cw.toFixed(2)}" height="${hBox}" class="fillA"/>` +
+        `<rect x="${x.toFixed(2)}" y="${y0}" width="${cw.toFixed(2)}" height="16" class="icing"/>` +
+        `<circle cx="${(x + cw / 2).toFixed(2)}" cy="${y0 - 8}" r="${Math.min(8, cw / 2.6)}" class="cherry"/>`);
+    }
+    body += `<rect x="${x0}" y="${y0}" width="${wBox}" height="${hBox}" rx="6" class="ring"/>` +
+      `<rect x="2" y="${y0 + hBox}" width="216" height="12" rx="6" class="plate"/>`;
+  }
+
+  if (kind === 'choc') {
+    vb = '0 0 220 160';
+    const [rows, cols] = gridFor(d);
+    const pad = 8, cw = (220 - pad * 2) / cols, ch = (160 - pad * 2) / rows;
+    for (let i = 0; i < d; i++) {
+      const rI = Math.floor(i / cols), cI = i % cols;
+      const x = pad + cI * cw, y = pad + rI * ch;
+      body += cell(i,
+        `<rect x="${(x + 2).toFixed(2)}" y="${(y + 2).toFixed(2)}" width="${(cw - 4).toFixed(2)}" height="${(ch - 4).toFixed(2)}" rx="9" class="fillA"/>` +
+        `<rect x="${(x + 9).toFixed(2)}" y="${(y + 9).toFixed(2)}" width="${(cw - 18).toFixed(2)}" height="${(ch - 18).toFixed(2)}" rx="6" class="shine"/>`);
+    }
+  }
+
+  if (kind === 'bar') {
+    vb = '0 0 220 56';
+    const x0 = 6, wBox = 208, cw = wBox / d;
+    for (let i = 0; i < d; i++) {
+      const x = x0 + i * cw;
+      body += cell(i, `<rect x="${x.toFixed(2)}" y="6" width="${cw.toFixed(2)}" height="44" class="fillA"/>`);
+    }
+    body += `<rect x="${x0}" y="6" width="${wBox}" height="44" rx="8" class="ring"/>`;
+  }
+
+  if (kind === 'fruit') {
+    const per = d <= 5 ? d : Math.ceil(d / 2), rowsN = d <= 5 ? 1 : 2;
+    const cwd = 220 / per, rad = Math.min(30, cwd / 2 - 4);
+    vb = `0 0 220 ${rowsN * (rad * 2 + 16) + 4}`;
+    for (let i = 0; i < d; i++) {
+      const rI = Math.floor(i / per), cI = i % per;
+      const inRow = rI === rowsN - 1 ? d - per * (rowsN - 1) : per;
+      const offset = (220 - inRow * cwd) / 2;
+      const cx = offset + cI * cwd + cwd / 2, cy = 8 + rad + rI * (rad * 2 + 16);
+      body += cell(i,
+        `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${rad.toFixed(1)}" class="fillA"/>` +
+        `<path d="M${cx.toFixed(1)} ${(cy - rad + 2).toFixed(1)} q${rad * 0.1} ${-rad * 0.45} ${rad * 0.4} ${-rad * 0.5}" class="stem"/>` +
+        `<ellipse cx="${(cx + rad * 0.45).toFixed(1)}" cy="${(cy - rad - 1).toFixed(1)}" rx="${rad * 0.3}" ry="${rad * 0.16}" class="leaf"/>` +
+        `<circle cx="${(cx - rad * 0.38).toFixed(1)}" cy="${(cy - rad * 0.3).toFixed(1)}" r="${rad * 0.2}" class="shine2"/>`);
+    }
+  }
+
+  return `<svg class="${cls}" viewBox="${vb}" style="width:${w}px;max-width:100%" role="img" ` +
+    `aria-label="${KIND_NAME[kind]} dibagi ${d} bagian, ${flags.filter(Boolean).length} berwarna" data-kind="${kind}" data-d="${d}" data-on="${flags.filter(Boolean).length}">${body}</svg>`;
+}
+
+/* n bagian berwarna pertama dari d bagian */
+const fracVis = (kind, n, d, opts) => partsVis(kind, d, Array.from({ length: d }, (_, i) => i < n), opts);
+const emptyVis = (kind, d, opts) => partsVis(kind, d, Array(d).fill(false), opts);
+
+/* Dua batang bertumpuk untuk perbandingan / pecahan senilai */
+function stackBars(items, w = 260) {
+  return `<div class="stack-bars">${items.map(it =>
+    `<div class="sb-row"><span class="sb-label">${fr(it.n, it.d)}</span>${fracVis('bar', it.n, it.d, { w })}</div>`).join('')}</div>`;
+}
+
+/* ---------- Maskot: Pipi si Petualang ---------- */
+function mascot(mood = 'happy', size = 140) {
+  const mouths = {
+    happy: '<path d="M50 78 q10 12 20 0" class="mouth"/>',
+    cheer: '<path d="M46 76 q14 22 28 0 z" class="mouth open"/><path d="M52 83 q8 6 16 0" class="tongue"/>',
+    think: '<path d="M52 82 q8 -4 16 0" class="mouth"/>',
+    sad:   '<path d="M52 84 q8 -8 16 0" class="mouth"/>'
+  };
+  const eyes = {
+    happy: '<circle cx="47" cy="64" r="5" class="eye"/><circle cx="73" cy="64" r="5" class="eye"/>',
+    cheer: '<path d="M41 66 q6 -9 12 0" class="eyeline"/><path d="M67 66 q6 -9 12 0" class="eyeline"/>',
+    think: '<circle cx="47" cy="64" r="5" class="eye"/><circle cx="73" cy="64" r="5" class="eye"/><path d="M40 53 l14 -3" class="brow"/>',
+    sad:   '<circle cx="47" cy="65" r="5" class="eye"/><circle cx="73" cy="65" r="5" class="eye"/><path d="M40 52 l14 4 M80 52 l-14 4" class="brow"/>'
+  };
+  return `<svg class="mascot mascot-${mood}" viewBox="0 0 120 130" width="${size}" height="${size * 130 / 120}" role="img" aria-label="Pipi si Petualang">
+    <ellipse cx="60" cy="124" rx="30" ry="5" class="m-shadow"/>
+    <rect x="26" y="88" width="68" height="32" rx="16" class="m-body"/>
+    <rect x="16" y="92" width="20" height="26" rx="10" class="m-pack"/>
+    <circle cx="60" cy="68" r="34" class="m-face"/>
+    <circle cx="36" cy="76" r="6" class="m-cheek"/><circle cx="84" cy="76" r="6" class="m-cheek"/>
+    ${eyes[mood] || eyes.happy}${mouths[mood] || mouths.happy}
+    <path d="M24 46 q36 -34 72 0 z" class="m-hat"/>
+    <rect x="18" y="44" width="84" height="9" rx="4.5" class="m-brim"/>
+    <circle cx="60" cy="22" r="6" class="m-pom"/>
+    <path d="M44 38 l32 0" class="m-band"/>
+    <g class="m-pie"><circle cx="100" cy="100" r="13" class="m-pie-a"/><path d="M100 100 L100 87 A13 13 0 0 1 113 100 Z" class="m-pie-b"/></g>
+  </svg>`;
+}
+/* ============================================================
+   Pembuat soal: helper umum
+   Tipe: mc (pilihan ganda), fill (isian), match (pasangan),
+         order (urutkan), shade (arsir gambar)
+   ============================================================ */
+const NAMES = ['Dina', 'Budi', 'Sari', 'Raka', 'Ayu', 'Tono', 'Maya', 'Rafi', 'Nia', 'Joko', 'Lala', 'Bima'];
+const pickNames = k => sample(NAMES, k);
+
+/* Pilihan ganda. correct & wrong = {html, key}. Kunci unik dijaga. */
+function mcQ({ prompt, visual = '', correct, wrong, explain, truth = null, layout = '' }) {
+  const seen = new Set([correct.key]);
+  const opts = [{ html: correct.html, key: correct.key, ok: true }];
+  for (const w of wrong) {
+    if (seen.has(w.key)) continue;
+    seen.add(w.key);
+    opts.push({ html: w.html, key: w.key, ok: false });
+  }
+  const mixed = shuffle(opts).slice(0, 4);
+  if (!mixed.some(o => o.ok)) mixed[0] = opts[0];
+  const options = shuffle(mixed);
+  return { type: 'mc', prompt, visual, options, answer: options.findIndex(o => o.ok), explain, truth, layout };
+}
+
+/* Pilihan ganda khusus pecahan: kandidat pengecoh disaring sehingga NILAI-nya berbeda */
+function mcFrac({ prompt, visual, correct, candidates = [], explain, truth = null, show = simp }) {
+  const bad = [];
+  const add_ = f => {
+    if (!f || f.n <= 0 || f.d <= 0) return;
+    if (eq(f, correct) || bad.some(b => eq(b, f))) return;
+    bad.push(f);
+  };
+  shuffle(candidates).forEach(add_);
+  let guard = 0;
+  while (bad.length < 3 && guard++ < 60) {
+    const d = Math.max(2, correct.d + rand(-2, 3)), n = rand(1, d);
+    add_(F(n, d));
+  }
+  const wrongOpts = bad.slice(0, 3).map(f => ({ html: frF(f), key: fkey(f) }));
+  const cShown = show(correct);
+  return mcQ({ prompt, visual, correct: { html: frF(cShown), key: fkey(correct) }, wrong: wrongOpts, explain, truth: truth ?? val(correct) });
+}
+
+/* Isian. kind: 'two' (pembilang & penyebut) atau 'int' (bilangan bulat). */
+function fillQ({ prompt, visual = '', kind, answer, exact = false, explain, truth = null, unit = '' }) {
+  return { type: 'fill', prompt, visual, kind, answer, exact, explain, truth, unit };
+}
+
+/* Mencocokkan pasangan: pairs = [{l, r}] (html) */
+function matchQ({ prompt, pairs, explain }) {
+  return { type: 'match', prompt, visual: '', pairs, explain };
+}
+
+/* Mengurutkan dari terkecil ke terbesar: items = [F] */
+function orderQ({ prompt, fracs, explain }) {
+  const items = fracs.map((f, i) => ({ f, html: fr(f.n, f.d), id: i }));
+  const sorted = items.slice().sort((a, b) => cmp(a.f, b.f));
+  return { type: 'order', prompt, visual: '', items: shuffle(items), correctOrder: sorted.map(i => i.id), explain };
+}
+
+/* Arsir gambar: pemain mengklik bagian untuk mewarnai */
+function shadeQ({ prompt, kind, n, d, explain }) {
+  return { type: 'shade', prompt, visual: '', kind, n, d, explain };
+}
+
+/* Pilih pecahan acak yang nilainya berbeda semua */
+function distinctFracs(pool, k) {
+  const out = [];
+  for (const f of shuffle(pool)) {
+    if (out.length >= k) break;
+    if (!out.some(o => eq(o, f))) out.push(f);
+  }
+  return out;
+}
+
+/* Semua pecahan sejati dengan penyebut tertentu */
+const properFracs = dens => {
+  const out = [];
+  dens.forEach(d => { for (let n = 1; n < d; n++) out.push(F(n, d)); });
+  return out;
+};
+
+/* Penjelasan langkah penyamaan penyebut */
+function commonDenExplain(a, b, sign) {
+  const L = lcm(a.d, b.d);
+  const an = a.n * (L / a.d), bn = b.n * (L / b.d);
+  const res = sign === '+' ? an + bn : an - bn;
+  const r = simp(F(res, L));
+  const same = a.d === b.d;
+  let s = same
+    ? `Penyebutnya sudah sama (${L}), jadi cukup ${sign === '+' ? 'jumlahkan' : 'kurangkan'} pembilangnya: ${fr(a.n, L)} ${op(sign)} ${fr(b.n, L)} = ${fr(res, L)}.`
+    : `Samakan penyebut dulu menjadi ${L}: ${fr(a.n, a.d)} = ${fr(an, L)} dan ${fr(b.n, b.d)} = ${fr(bn, L)}. Lalu ${sign === '+' ? 'jumlahkan' : 'kurangkan'} pembilangnya: ${fr(an, L)} ${op(sign)} ${fr(bn, L)} = ${fr(res, L)}.`;
+  if (r.n !== res || r.d !== L) s += ` Disederhanakan menjadi ${frF(r)}.`;
+  return s;
+}
+/* ============================================================
+   LEVEL 1 – Mengenal Pecahan   |   LEVEL 2 – Pecahan Senilai
+   ============================================================ */
+const LEVELS = [];
+
+/* ---------------- LEVEL 1 ---------------- */
+LEVELS.push({
+  id: 1, title: 'Mengenal Pecahan', region: 'Lembah Pizza', color: 'peach', icon: 'pizza',
+  topics: 'Pembilang, penyebut, dan membaca gambar pecahan',
+  lesson: () => [
+    { title: 'Apa itu pecahan?', text: 'Pecahan menunjukkan <b>bagian</b> dari satu keseluruhan yang dibagi <b>sama besar</b>.', visual: fracVis('pizza', 3, 8, { w: 190 }), cap: `Pizza dibagi 8 sama besar. 3 bagian berwarna = ${fr(3, 8)}` },
+    { title: 'Pembilang dan penyebut', text: `<span class="fr-big">${fr(3, 8)}</span><ul class="tips"><li><b>Penyebut</b> (bawah) = banyak bagian seluruhnya.</li><li><b>Pembilang</b> (atas) = banyak bagian yang diambil.</li></ul>`, visual: '', cap: '' },
+    { title: 'Membaca gambar', text: 'Hitung dulu semua bagian untuk penyebut, lalu hitung bagian berwarna untuk pembilang.', visual: fracVis('choc', 2, 6, { w: 200 }), cap: `Ada 6 kotak, 2 berwarna → ${fr(2, 6)}` }
+  ],
+  make() {
+    const qs = [];
+    const kinds = ['pizza', 'cake', 'choc'];
+
+    // 1. Baca pecahan dari gambar (pilihan ganda)
+    { const d = pick([4, 6, 8]), n = rand(1, d - 1), kind = pick(kinds);
+      qs.push(mcFrac({
+        prompt: `Bagian ${KIND_NAME[kind]} yang <b>berwarna</b> menunjukkan pecahan ...`,
+        visual: fracVis(kind, n, d, { w: 220 }),
+        correct: F(n, d), show: f => f,
+        candidates: [F(d - n, d), F(n, d - n), F(d, n), F(n + 1, d), F(n, d + 1), F(n - 1, d)],
+        explain: `Gambar dibagi menjadi <b>${d}</b> bagian sama besar (penyebut = ${d}). Bagian berwarna ada <b>${n}</b> (pembilang = ${n}). Jadi pecahannya ${fr(n, d)}.`
+      })); }
+
+    // 2. Konsep pembilang & penyebut
+    { const d = rand(3, 9), n = rand(1, d - 1), ask = pick(['penyebut', 'pembilang']);
+      const num = ask === 'penyebut' ? d : n;
+      qs.push(mcQ({
+        prompt: `Pada pecahan ${fr(n, d)}, angka <b>${num}</b> disebut ...`,
+        correct: { html: ask === 'penyebut' ? 'Penyebut' : 'Pembilang', key: ask },
+        wrong: [
+          { html: ask === 'penyebut' ? 'Pembilang' : 'Penyebut', key: 'x' + ask },
+          { html: 'Hasil bagi', key: 'hb' }, { html: 'Bilangan bulat', key: 'bb' }
+        ],
+        explain: ask === 'penyebut'
+          ? `Angka di <b>bawah</b> garis pecahan adalah <b>penyebut</b>. Penyebut ${d} berarti keseluruhan dibagi menjadi ${d} bagian sama besar.`
+          : `Angka di <b>atas</b> garis pecahan adalah <b>pembilang</b>. Pembilang ${n} berarti ada ${n} bagian yang diambil.`
+      })); }
+
+    // 3. Arsir gambar sesuai pecahan
+    { const d = pick([4, 6, 8, 10]), n = rand(1, d - 1), kind = pick(['pizza', 'choc', 'cake']);
+      qs.push(shadeQ({
+        prompt: `Ubah pecahan menjadi gambar! Klik bagian ${KIND_NAME[kind]} untuk mewarnai ${fr(n, d)}.`,
+        kind, n, d,
+        explain: `Penyebut ${d} artinya ${KIND_NAME[kind]} dibagi ${d} bagian. Pembilang ${n} artinya warnai <b>${n}</b> bagian. Jadi ada ${n} bagian berwarna dari ${d}.`
+      })); }
+
+    // 4. Ubah gambar menjadi pecahan (isian pembilang & penyebut)
+    { const d = pick([3, 5, 6, 8, 9]), n = rand(1, d - 1), kind = pick(['fruit', 'choc', 'cake', 'pizza']);
+      const vis = kind === 'fruit' ? fracVis('fruit', n, d, { w: 250 }) : fracVis(kind, n, d, { w: 220 });
+      qs.push(fillQ({
+        prompt: kind === 'fruit'
+          ? 'Tulis pecahan buah yang berwarna <b>merah</b> dari seluruh buah!'
+          : `Tulis pecahan dari bagian ${KIND_NAME[kind]} yang <b>berwarna</b>!`,
+        visual: vis, kind: 'two', answer: F(n, d), exact: true, truth: n / d,
+        explain: `Hitung seluruh bagian: ada <b>${d}</b> (penyebut). Hitung yang berwarna: ada <b>${n}</b> (pembilang). Jadi ${fr(n, d)}.`
+      })); }
+
+    // 5. Cocokkan gambar dengan pecahan
+    { const picks = distinctFracs([F(1, 4), F(3, 4), F(2, 3), F(1, 3), F(2, 5), F(3, 6), F(5, 8), F(3, 8), F(1, 6), F(4, 5)], 3);
+      const kd = shuffle(['pizza', 'cake', 'choc']);
+      qs.push(matchQ({
+        prompt: 'Cocokkan setiap gambar dengan pecahan yang tepat!',
+        pairs: picks.map((f, i) => ({ l: fracVis(kd[i], f.n, f.d, { w: 120 }), r: fr(f.n, f.d) })),
+        explain: 'Untuk tiap gambar: banyak seluruh bagian = penyebut, banyak bagian berwarna = pembilang.'
+      })); }
+
+    // 6. Soal cerita
+    { if (Math.random() < 0.5) {
+        const [nm] = pickNames(1), d = pick([6, 8, 10, 12]), n = rand(2, d - 2), it = pick([['kue', 'potong'], ['pizza', 'potong'], ['roti', 'potong']]);
+        qs.push(mcFrac({
+          prompt: `Ibu memotong ${it[0]} menjadi <b>${d}</b> ${it[1]} sama besar. ${nm} memakan <b>${n}</b> ${it[1]}. Pecahan ${it[0]} yang dimakan ${nm} adalah ...`,
+          correct: F(n, d), show: f => f,
+          candidates: [F(d - n, d), F(n, d - n), F(d, n), F(n + 1, d)],
+          explain: `Seluruh ${it[0]} ada ${d} potong → penyebut ${d}. ${nm} makan ${n} potong → pembilang ${n}. Jadi ${fr(n, d)}.`
+        }));
+      } else {
+        const d = pick([5, 6, 8]), n = rand(2, d - 2);
+        qs.push(mcFrac({
+          prompt: `Di keranjang ada <b>${d}</b> apel. <b>${n}</b> apel berwarna merah, sisanya hijau. Pecahan apel merah adalah ...`,
+          visual: fracVis('fruit', n, d, { w: 250 }),
+          correct: F(n, d), show: f => f,
+          candidates: [F(d - n, d), F(n, d - n), F(d, n), F(n + 1, d)],
+          explain: `Seluruh apel ada ${d} (penyebut). Apel merah ada ${n} (pembilang). Jadi ${fr(n, d)}.`
+        }));
+      } }
+    return qs;
+  }
+});
+
+/* ---------------- LEVEL 2 ---------------- */
+LEVELS.push({
+  id: 2, title: 'Pecahan Senilai', region: 'Hutan Kembar', color: 'mint', icon: 'bars',
+  topics: 'Pecahan berbeda penulisan, nilainya sama',
+  lesson: () => [
+    { title: 'Nilainya sama!', text: `Pecahan senilai tampak berbeda tetapi menunjukkan <b>bagian yang sama besar</b>.`, visual: stackBars([F(1, 2), F(2, 4), F(4, 8)], 250), cap: `${fr(1, 2)} = ${fr(2, 4)} = ${fr(4, 8)}` },
+    { title: 'Cara mencari', text: `Kalikan atau bagi <b>pembilang dan penyebut</b> dengan bilangan yang <b>sama</b>.<div class="fr-big">${fr(2, 3)} ${op('=')} ${fr('2 × 4', '3 × 4')} ${op('=')} ${fr(8, 12)}</div>`, visual: '', cap: '' },
+    { title: 'Menyederhanakan', text: `Bagi pembilang dan penyebut dengan bilangan sama sampai tidak bisa dibagi lagi.<div class="fr-big">${fr('6 ÷ 3', '9 ÷ 3')} ${op('=')} ${fr(2, 3)}</div>`, visual: '', cap: '' }
+  ],
+  make() {
+    const qs = [];
+    const bases = [F(1, 2), F(1, 3), F(2, 3), F(3, 4), F(1, 4), F(2, 5), F(3, 5), F(1, 5), F(5, 6)];
+
+    // 1. Gambar dua batang → pecahan senilai
+    { const b = pick(bases), k = pick([2, 3, 4]);
+      const second = F(b.n * k, b.d * k);
+      qs.push(mcFrac({
+        prompt: 'Dua pita di bawah sama panjang. Bagian berwarna keduanya sama besar. Pecahan senilai dengan pita atas adalah pecahan ...',
+        visual: `<div class="stack-bars"><div class="sb-row"><span class="sb-label">${fr(b.n, b.d)}</span>${fracVis('bar', b.n, b.d, { w: 260 })}</div><div class="sb-row"><span class="sb-label">${fr('?', '?')}</span>${fracVis('bar', second.n, second.d, { w: 260 })}</div></div>`,
+        correct: second, show: f => f,
+        candidates: [F(b.n + k, b.d + k), F(b.n * k, b.d), F(b.n, b.d * k), F(b.n + 1, b.d + 1)],
+        explain: `Pita bawah dibagi ${second.d} bagian dan ${second.n} bagian berwarna. Kalikan pembilang dan penyebut ${fr(b.n, b.d)} dengan ${k}: ${fr(b.n + ' × ' + k, b.d + ' × ' + k)} = ${fr(second.n, second.d)}.`
+      })); }
+
+    // 2. Pilih pecahan senilai
+    { const b = pick(bases), k = pick([2, 3, 4]);
+      const s = F(b.n * k, b.d * k);
+      qs.push(mcFrac({
+        prompt: `Pecahan yang senilai dengan ${fr(b.n, b.d)} adalah ...`,
+        correct: s, show: f => f,
+        candidates: [F(b.n + k, b.d + k), F(b.n * k, b.d), F(b.n, b.d * k), F(b.n + 1, b.d + 1), F(b.d, b.n)],
+        explain: `Kalikan pembilang dan penyebut dengan angka yang sama: ${fr(b.n + ' × ' + k, b.d + ' × ' + k)} = ${fr(s.n, s.d)}. Menambah angka yang sama (misal +${k}) tidak menjaga nilainya.`
+      })); }
+
+    // 3. Lengkapi pembilang
+    { const b = pick(bases), k = pick([2, 3, 4, 5]);
+      qs.push(fillQ({
+        prompt: `Lengkapi pecahan senilai ini: ${fr(b.n, b.d)} ${op('=')} ${fr('{{input}}', b.d * k)}`,
+        kind: 'int', answer: b.n * k, truth: b.n * k,
+        explain: `Penyebut berubah dari ${b.d} menjadi ${b.d * k} (dikali ${k}). Maka pembilang juga dikali ${k}: ${b.n} × ${k} = <b>${b.n * k}</b>.`
+      })); }
+
+    // 4. Lengkapi penyebut dengan pembagian
+    { const b = pick([F(1, 2), F(2, 3), F(3, 4), F(3, 5), F(1, 3), F(2, 5)]), k = pick([2, 3, 4]);
+      qs.push(fillQ({
+        prompt: `Lengkapi pecahan senilai ini: ${fr(b.n * k, b.d * k)} ${op('=')} ${fr(b.n, '{{input}}')}`,
+        kind: 'int', answer: b.d, truth: b.d,
+        explain: `Pembilang berubah dari ${b.n * k} menjadi ${b.n} (dibagi ${k}). Maka penyebut juga dibagi ${k}: ${b.d * k} ÷ ${k} = <b>${b.d}</b>.`
+      })); }
+
+    // 5. Cocokkan pecahan senilai
+    { const bs = distinctFracs(bases, 3), ks = [2, 3, 4];
+      qs.push(matchQ({
+        prompt: 'Cocokkan setiap pecahan dengan pecahan senilainya!',
+        pairs: bs.map((b, i) => { const k = ks[i]; return { l: fr(b.n, b.d), r: fr(b.n * k, b.d * k) }; }),
+        explain: 'Kalikan pembilang dan penyebut dengan bilangan yang sama untuk mendapatkan pecahan senilai.'
+      })); }
+
+    // 6. Mana yang BUKAN senilai
+    { const b = pick(bases);
+      const same = [2, 3, 4].map(k => F(b.n * k, b.d * k));
+      const k = pick([2, 3]), notSame = F(b.n * k + 1, b.d * k);
+      qs.push(mcQ({
+        prompt: `Manakah yang <b>BUKAN</b> pecahan senilai dengan ${fr(b.n, b.d)}?`,
+        correct: { html: fr(notSame.n, notSame.d), key: 'no' },
+        wrong: same.map(f => ({ html: fr(f.n, f.d), key: fkey(f) })),
+        explain: `${fr(notSame.n, notSame.d)} tidak bisa diperoleh dengan mengalikan ${fr(b.n, b.d)} dengan angka yang sama. Pembilangnya ${b.n * k} + 1, bukan ${b.n * k}. Yang lain senilai.`
+      })); }
+
+    // 7. Sederhanakan (bentuk paling sederhana)
+    { const b = pick([F(2, 3), F(3, 4), F(1, 2), F(3, 5), F(4, 5), F(5, 6)]), k = pick([2, 3, 4]);
+      qs.push(fillQ({
+        prompt: `Sederhanakan ${fr(b.n * k, b.d * k)} menjadi pecahan <b>paling sederhana</b>!`,
+        kind: 'two', answer: b, exact: true, truth: b.n / b.d,
+        explain: `Bagi pembilang dan penyebut dengan ${k} (faktor persekutuan terbesar): ${fr(b.n * k + ' ÷ ' + k, b.d * k + ' ÷ ' + k)} = ${fr(b.n, b.d)}.`
+      })); }
+    return qs;
+  }
+});
+/* ============================================================
+   LEVEL 3 – Membandingkan Pecahan   |   LEVEL 4 – Tambah & Kurang
+   ============================================================ */
+const SYM = { '>': '&gt;', '<': '&lt;', '=': '=' };
+const symOf = (a, b) => (cmp(a, b) > 0 ? '>' : cmp(a, b) < 0 ? '<' : '=');
+const symOptions = () => ['>', '<', '='].map(s => ({ html: `<span class="symbig">${SYM[s]}</span>`, key: s }));
+const MINUS = '−';
+
+function symQ({ prompt, visual, a, b, explain }) {
+  const s = symOf(a, b);
+  return mcQ({
+    prompt, visual,
+    correct: symOptions().find(o => o.key === s),
+    wrong: symOptions().filter(o => o.key !== s),
+    explain, truth: Math.sign(val(a) - val(b)), layout: 'row'
+  });
+}
+const cmpLine = (a, b) => `<div class="cmp-line">${fr(a.n, a.d)}<span class="cmp-q">?</span>${fr(b.n, b.d)}</div>`;
+
+/* ---------------- LEVEL 3 ---------------- */
+LEVELS.push({
+  id: 3, title: 'Membandingkan Pecahan', region: 'Jembatan Timbangan', color: 'sky', icon: 'scale',
+  topics: 'Lebih besar, lebih kecil, sama dengan, dan mengurutkan',
+  lesson: () => [
+    { title: 'Penyebut sama', text: 'Jika penyebutnya sama, <b>pembilang yang lebih besar</b> berarti pecahan yang lebih besar.', visual: stackBars([F(3, 8), F(5, 8)], 250), cap: `${fr(3, 8)} ${op('&lt;')} ${fr(5, 8)}` },
+    { title: 'Penyebut berbeda', text: `Samakan penyebutnya dulu, baru bandingkan pembilangnya.<div class="fr-big">${fr(1, 2)} ${op('?')} ${fr(2, 5)}</div>Penyebut sama jadi 10: ${fr(5, 10)} ${op('&gt;')} ${fr(4, 10)}`, visual: '', cap: '' },
+    { title: 'Simbol perbandingan', text: `<span class="symbig">&gt;</span> lebih besar dari &nbsp; <span class="symbig">&lt;</span> lebih kecil dari &nbsp; <span class="symbig">=</span> sama dengan<br>Mulut simbol selalu menghadap ke pecahan yang <b>lebih besar</b>.`, visual: '', cap: '' }
+  ],
+  make() {
+    const qs = [];
+
+    // 1. Penyebut sama, simbol
+    { const d = rand(5, 12); let a = rand(1, d - 1), b = rand(1, d - 1);
+      if (Math.random() < 0.2) b = a;
+      const A = F(a, d), B = F(b, d);
+      qs.push(symQ({
+        prompt: 'Pilih simbol yang tepat!', a: A, b: B,
+        visual: stackBars([A, B], 240) + cmpLine(A, B),
+        explain: `Penyebutnya sama (${d}), jadi bandingkan pembilangnya: ${a} ${SYM[symOf(A, B)]} ${b}. Maka ${fr(a, d)} ${SYM[symOf(A, B)]} ${fr(b, d)}.`
+      })); }
+
+    // 2. Pembilang sama
+    { const n = rand(1, 3), b = rand(n + 1, 5), c = rand(b + 1, 9);
+      const A = F(n, b), C = F(n, c), swap = Math.random() < 0.5;
+      const x = swap ? C : A, y = swap ? A : C;
+      qs.push(mcFrac({
+        prompt: `Manakah pecahan yang <b>lebih besar</b>, ${fr(x.n, x.d)} atau ${fr(y.n, y.d)}?`,
+        visual: stackBars([x, y], 240),
+        correct: A, show: f => f, candidates: [C],
+        explain: `Pembilangnya sama (${n}). Makin besar penyebut, makin kecil tiap potongannya. ${b} < ${c}, jadi ${fr(n, b)} &gt; ${fr(n, c)}.`
+      }));
+      // hanya dua pilihan: sisakan dua opsi
+      const q = qs[qs.length - 1]; q.options = q.options.filter(o => o.key === fkey(A) || o.key === fkey(C));
+      q.answer = q.options.findIndex(o => o.ok); q.layout = 'row'; }
+
+    // 3. Penyebut berbeda
+    { let A, B;
+      if (Math.random() < 0.25) { const b0 = pick([F(1, 2), F(2, 3), F(3, 4), F(1, 3)]), k = pick([2, 3]); A = b0; B = F(b0.n * k, b0.d * k); }
+      else { do { const b = pick([2, 3, 4, 5, 6]), d = pick([2, 3, 4, 5, 6]); A = F(rand(1, b - 1), b); B = F(rand(1, d - 1), d); } while (A.d === B.d || eq(A, B)); }
+      const L = lcm(A.d, B.d), an = A.n * L / A.d, bn = B.n * L / B.d;
+      qs.push(symQ({
+        prompt: 'Samakan penyebutnya, lalu pilih simbol yang tepat!', a: A, b: B,
+        visual: cmpLine(A, B),
+        explain: `Samakan penyebut menjadi ${L}: ${fr(A.n, A.d)} = ${fr(an, L)} dan ${fr(B.n, B.d)} = ${fr(bn, L)}. Bandingkan pembilang: ${an} ${SYM[symOf(A, B)]} ${bn}. Jadi ${fr(A.n, A.d)} ${SYM[symOf(A, B)]} ${fr(B.n, B.d)}.`
+      })); }
+
+    // 4. Urutkan dari terkecil
+    { const pool = properFracs([2, 3, 4, 6, 12]);
+      const fracs = distinctFracs(pool, 4);
+      const sorted = fracs.slice().sort(cmp);
+      qs.push(orderQ({
+        prompt: 'Urutkan dari yang <b>terkecil</b> ke <b>terbesar</b>! Ketuk pecahan satu per satu.', fracs,
+        explain: `Samakan penyebut menjadi 12: ${fracs.map(f => `${fr(f.n, f.d)} = ${fr(f.n * 12 / f.d, 12)}`).join(', ')}. Urutannya: ${sorted.map(f => fr(f.n, f.d)).join(' ' + op('&lt;') + ' ')}.`
+      })); }
+
+    // 5. Pecahan terkecil
+    { const fracs = distinctFracs(properFracs([3, 4, 5, 6, 8]), 4);
+      const L = fracs.reduce((l, f) => lcm(l, f.d), 1);
+      const small = fracs.slice().sort(cmp)[0];
+      qs.push(mcQ({
+        prompt: 'Manakah pecahan yang <b>paling kecil</b>?',
+        correct: { html: fr(small.n, small.d), key: fkey(small) },
+        wrong: fracs.filter(f => !eq(f, small)).map(f => ({ html: fr(f.n, f.d), key: fkey(f) })),
+        truth: val(small),
+        explain: `Samakan penyebut menjadi ${L}: ${fracs.map(f => `${fr(f.n, f.d)} = ${fr(f.n * L / f.d, L)}`).join(', ')}. Pembilang terkecil adalah ${small.n * L / small.d}, yaitu ${fr(small.n, small.d)}.`
+      })); }
+
+    // 6. Soal cerita
+    { let A, B;
+      do { A = pick(properFracs([2, 3, 4, 5, 6, 8])); B = pick(properFracs([2, 3, 4, 5, 6, 8])); } while (A.d === B.d || eq(A, B));
+      const [n1, n2] = pickNames(2), item = pick(['cokelat', 'pita', 'kue', 'tali']);
+      const verb = item === 'pita' || item === 'tali' ? 'memakai' : 'makan';
+      const L = lcm(A.d, B.d), win = cmp(A, B) > 0 ? n1 : n2;
+      qs.push(mcQ({
+        prompt: `${n1} ${verb} ${fr(A.n, A.d)} bagian ${item}, sedangkan ${n2} ${verb} ${fr(B.n, B.d)} bagian ${item} yang sama besar. Siapa yang ${verb} lebih banyak?`,
+        correct: { html: win, key: win },
+        wrong: [n1, n2, 'Sama banyak'].filter(x => x !== win).map(x => ({ html: x, key: x })),
+        truth: Math.sign(val(A) - val(B)),
+        explain: `Samakan penyebut menjadi ${L}: ${fr(A.n, A.d)} = ${fr(A.n * L / A.d, L)} dan ${fr(B.n, B.d)} = ${fr(B.n * L / B.d, L)}. ${A.n * L / A.d} ${SYM[symOf(A, B)]} ${B.n * L / B.d}, jadi ${win} ${verb} lebih banyak.`
+      })); }
+    return qs;
+  }
+});
+
+/* ---------------- LEVEL 4 ---------------- */
+const exprRow = (a, b, sign, kind = 'bar') =>
+  `<div class="eq-row">${fracVis(kind, a.n, a.d, { w: 150 })}<span class="eq-op">${sign}</span>${fracVis(kind, b.n, b.d, { w: 150 })}</div>`;
+
+LEVELS.push({
+  id: 4, title: 'Tambah & Kurang Pecahan', region: 'Pulau Gabungan', color: 'lemon', icon: 'plus',
+  topics: 'Penjumlahan dan pengurangan, penyebut sama dan berbeda',
+  lesson: () => [
+    { title: 'Penyebut sama', text: `Jumlahkan atau kurangkan <b>pembilangnya</b> saja. Penyebut tetap.<div class="fr-big">${fr(2, 8)} ${op('+')} ${fr(3, 8)} ${op('=')} ${fr(5, 8)}</div>`, visual: exprRow(F(2, 8), F(3, 8), '+'), cap: '' },
+    { title: 'Penyebut berbeda', text: `<b>Samakan penyebut</b> lebih dulu.<div class="fr-big">${fr(1, 2)} ${op('+')} ${fr(1, 4)} ${op('=')} ${fr(2, 4)} ${op('+')} ${fr(1, 4)} ${op('=')} ${fr(3, 4)}</div>`, visual: '', cap: '' },
+    { title: 'Langkah mudah', text: '<ol class="tips"><li>Cari penyebut yang sama (kelipatan persekutuan).</li><li>Ubah kedua pecahan.</li><li>Tambah / kurangkan pembilang.</li><li>Sederhanakan jika bisa.</li></ol>', visual: '', cap: '' }
+  ],
+  make() {
+    const qs = [];
+    const fillFrac = (prompt, visual, res, explain) => fillQ({ prompt, visual, kind: 'two', answer: res, exact: false, truth: val(res), explain });
+
+    // 1. Penjumlahan penyebut sama
+    { const d = rand(5, 12), a = rand(1, d - 3), b = rand(1, d - 1 - a);
+      const A = F(a, d), B = F(b, d), R = add(A, B);
+      qs.push(fillFrac(`Hitunglah: ${fr(a, d)} ${op('+')} ${fr(b, d)} ${op('=')} ?`, exprRow(A, B, '+'), R, commonDenExplain(A, B, '+'))); }
+
+    // 2. Pengurangan penyebut sama
+    { const d = rand(5, 12), a = rand(3, d - 1), b = rand(1, a - 1);
+      const A = F(a, d), B = F(b, d), R = sub(A, B);
+      qs.push(fillFrac(`Hitunglah: ${fr(a, d)} ${op(MINUS)} ${fr(b, d)} ${op('=')} ?`, exprRow(A, B, MINUS), R, commonDenExplain(A, B, '-'))); }
+
+    // 3. Penjumlahan penyebut berbeda (kelipatan)
+    { const [A, B] = pick([[F(1, 2), F(1, 4)], [F(1, 3), F(1, 6)], [F(2, 3), F(1, 6)], [F(1, 2), F(1, 6)], [F(3, 4), F(1, 8)], [F(1, 4), F(3, 8)], [F(1, 2), F(1, 8)], [F(2, 5), F(1, 10)]]);
+      const R = add(A, B);
+      qs.push(fillFrac(`Hitunglah: ${fr(A.n, A.d)} ${op('+')} ${fr(B.n, B.d)} ${op('=')} ?`, '', R, commonDenExplain(A, B, '+'))); }
+
+    // 4. Pengurangan penyebut berbeda (kelipatan)
+    { const [A, B] = pick([[F(3, 4), F(1, 2)], [F(5, 6), F(1, 3)], [F(7, 8), F(1, 4)], [F(2, 3), F(1, 6)], [F(3, 4), F(1, 8)], [F(4, 5), F(1, 10)], [F(1, 2), F(1, 6)]]);
+      const R = sub(A, B);
+      qs.push(fillFrac(`Hitunglah: ${fr(A.n, A.d)} ${op(MINUS)} ${fr(B.n, B.d)} ${op('=')} ?`, '', R, commonDenExplain(A, B, '-'))); }
+
+    // 5. Penyebut berbeda tanpa kelipatan (pilihan ganda)
+    { const [A, B] = pick([[F(1, 2), F(1, 3)], [F(1, 3), F(1, 4)], [F(1, 2), F(1, 5)], [F(1, 4), F(1, 5)], [F(2, 3), F(1, 4)], [F(3, 4), F(1, 5)]]);
+      const plus = Math.random() < 0.5, R = plus ? add(A, B) : sub(A, B);
+      const naive = plus ? F(A.n + B.n, A.d + B.d) : F(A.n - B.n || 1, A.d - B.d || 1);
+      qs.push(mcFrac({
+        prompt: `${fr(A.n, A.d)} ${op(plus ? '+' : MINUS)} ${fr(B.n, B.d)} ${op('=')} ...`,
+        correct: R, show: f => f,
+        candidates: [naive, F(R.n + 1, R.d), F(R.n, R.d + 1), F(Math.max(1, R.n - 1), R.d)],
+        explain: commonDenExplain(A, B, plus ? '+' : '-') + ' Ingat: penyebut tidak boleh langsung dijumlahkan.'
+      })); }
+
+    // 6. Soal cerita
+    { const stories = [
+        { s: '+', A: F(1, 2), B: F(1, 4), t: (a, b) => `Ibu membeli ${a} kg gula pasir dan ${b} kg gula merah. Berapa kg gula yang dibeli Ibu seluruhnya?` },
+        { s: '+', A: F(1, 3), B: F(1, 6), t: (a, b) => `Budi minum ${a} liter susu saat pagi dan ${b} liter saat sore. Berapa liter susu yang diminum Budi?` },
+        { s: '-', A: F(5, 6), B: F(1, 3), t: (a, b) => `Rina punya pita sepanjang ${a} meter. Pita dipakai ${b} meter untuk hiasan. Berapa meter pita yang tersisa?` },
+        { s: '-', A: F(3, 4), B: F(1, 8), t: (a, b) => `Dalam botol ada ${a} liter sirup. Dituang ${b} liter ke gelas. Berapa liter sirup yang tersisa?` },
+        { s: '+', A: F(2, 5), B: F(3, 10), t: (a, b) => `Pak Tani menanam padi di ${a} bagian sawah dan jagung di ${b} bagian sawah. Berapa bagian sawah yang sudah ditanami?` }
+      ];
+      const st = pick(stories), plus = st.s === '+', R = plus ? add(st.A, st.B) : sub(st.A, st.B);
+      qs.push(mcFrac({
+        prompt: st.t(fr(st.A.n, st.A.d), fr(st.B.n, st.B.d)),
+        correct: R, show: f => f,
+        candidates: [F(st.A.n + st.B.n, st.A.d + st.B.d), F(R.n + 1, R.d), F(R.n, R.d + 1), F(Math.max(1, R.n - 1), R.d)],
+        explain: commonDenExplain(st.A, st.B, plus ? '+' : '-')
+      })); }
+
+    // 7. Operasi campuran tiga pecahan
+    { const [A, B, C] = pick([[F(3, 4), F(1, 2), F(1, 8)], [F(5, 6), F(1, 3), F(1, 6)], [F(1, 2), F(1, 4), F(1, 8)], [F(2, 3), F(1, 3), F(1, 6)]]);
+      // pola: A - B + C (hasil selalu positif)
+      const R = add(sub(A, B), C), m = sub(A, B);
+      qs.push(fillFrac(`Tantangan! ${fr(A.n, A.d)} ${op(MINUS)} ${fr(B.n, B.d)} ${op('+')} ${fr(C.n, C.d)} ${op('=')} ?`, '', R,
+        `Kerjakan dari kiri. Langkah 1: ${fr(A.n, A.d)} ${op(MINUS)} ${fr(B.n, B.d)} = ${frF(m)}. Langkah 2: ${frF(m)} ${op('+')} ${fr(C.n, C.d)} = ${frF(R)}.`)); }
+    return qs;
+  }
+});
+/* ============================================================
+   LEVEL 5 – Kali & Bagi Pecahan   |   LEVEL 6 – Misi Tantangan
+   ============================================================ */
+const TIMES = '×', DIVS = '÷';
+const mulExplain = (A, B) => {
+  const r = F(A.n * B.n, A.d * B.d), s = simp(r);
+  return `Kalikan pembilang dengan pembilang dan penyebut dengan penyebut: ${fr(A.n, A.d)} ${op(TIMES)} ${fr(B.n, B.d)} = ${fr(A.n + ' × ' + B.n, A.d + ' × ' + B.d)} = ${fr(r.n, r.d)}${s.n !== r.n ? ', disederhanakan menjadi ' + frF(s) : ''}.`;
+};
+const divExplain = (A, B) => {
+  const r = F(A.n * B.d, A.d * B.n), s = simp(r);
+  return `Bagi pecahan = kalikan dengan <b>kebalikan</b>: ${fr(A.n, A.d)} ${op(DIVS)} ${fr(B.n, B.d)} = ${fr(A.n, A.d)} ${op(TIMES)} ${fr(B.d, B.n)} = ${fr(r.n, r.d)}${s.n !== r.n || s.d !== r.d ? ' = ' + frF(s) : ''}.`;
+};
+
+/* ---------------- LEVEL 5 ---------------- */
+LEVELS.push({
+  id: 5, title: 'Kali & Bagi Pecahan', region: 'Gunung Kali-Bagi', color: 'lilac', icon: 'times',
+  topics: 'Perkalian dan pembagian pecahan',
+  lesson: () => [
+    { title: 'Pecahan × bilangan bulat', text: `Kalikan <b>pembilangnya</b> saja.<div class="fr-big">${op('3')} ${op(TIMES)} ${fr(1, 4)} ${op('=')} ${fr('3 × 1', 4)} ${op('=')} ${fr(3, 4)}</div>`, visual: fracVis('pizza', 3, 4, { w: 150 }), cap: `3 potong dari 4 = ${fr(3, 4)}` },
+    { title: 'Pecahan × pecahan', text: `Pembilang × pembilang, penyebut × penyebut.<div class="fr-big">${fr(2, 3)} ${op(TIMES)} ${fr(3, 4)} ${op('=')} ${fr(6, 12)} ${op('=')} ${fr(1, 2)}</div>`, visual: '', cap: '' },
+    { title: 'Pembagian pecahan', text: `Bagi = kalikan dengan <b>kebalikan</b>.<div class="fr-big">${fr(1, 2)} ${op(DIVS)} ${fr(1, 4)} ${op('=')} ${fr(1, 2)} ${op(TIMES)} ${fr(4, 1)} ${op('=')} ${op('2')}</div>${fr(3, 4)} ${op(DIVS)} 3 = ${fr(3, 4)} ${op(TIMES)} ${fr(1, 3)} = ${fr(1, 4)}`, visual: '', cap: '' }
+  ],
+  make() {
+    const qs = [];
+
+    // 1. Pecahan × bilangan bulat
+    { let a, b, n;
+      do { b = pick([4, 5, 6, 8, 9, 10]); a = rand(1, 2); n = rand(2, 5); } while (a * n >= b);
+      const R = simp(F(a * n, b));
+      qs.push(fillQ({
+        prompt: `Hitunglah: ${n} ${op(TIMES)} ${fr(a, b)} ${op('=')} ?`,
+        visual: '', kind: 'two', answer: R, exact: false, truth: n * a / b,
+        explain: `${n} × ${fr(a, b)} = ${fr(n + ' × ' + a, b)} = ${fr(a * n, b)}${R.n !== a * n ? ', disederhanakan menjadi ' + frF(R) : ''}.`
+      })); }
+
+    // 2. Pecahan × pecahan
+    { let A, B;
+      do { A = F(rand(1, 3), rand(2, 6)); B = F(rand(1, 3), rand(2, 6)); } while (A.n >= A.d || B.n >= B.d);
+      const R = mul(A, B);
+      qs.push(fillQ({
+        prompt: `Hitunglah: ${fr(A.n, A.d)} ${op(TIMES)} ${fr(B.n, B.d)} ${op('=')} ?`,
+        visual: '', kind: 'two', answer: R, exact: false, truth: (A.n / A.d) * (B.n / B.d), explain: mulExplain(A, B)
+      })); }
+
+    // 3. Pecahan ÷ bilangan bulat
+    { const [A, n] = pick([[F(1, 2), 3], [F(3, 4), 3], [F(2, 3), 2], [F(1, 3), 2], [F(3, 5), 3], [F(4, 5), 2], [F(1, 4), 2], [F(3, 4), 2]]);
+      const R = div(A, F(n, 1));
+      qs.push(fillQ({
+        prompt: `Hitunglah: ${fr(A.n, A.d)} ${op(DIVS)} ${n} ${op('=')} ?`,
+        visual: '', kind: 'two', answer: R, exact: false, truth: (A.n / A.d) / n,
+        explain: `Bagi dengan ${n} sama dengan kali ${fr(1, n)}: ${fr(A.n, A.d)} ${op(TIMES)} ${fr(1, n)} = ${fr(A.n, A.d * n)}${simp(F(A.n, A.d * n)).d !== A.d * n ? ' = ' + frF(R) : ''}.`
+      })); }
+
+    // 4. Pecahan ÷ pecahan (pilihan ganda)
+    { const [A, B] = pick([[F(1, 2), F(1, 4)], [F(3, 4), F(1, 8)], [F(1, 2), F(3, 4)], [F(2, 3), F(1, 3)], [F(3, 5), F(3, 10)], [F(1, 3), F(1, 6)], [F(2, 3), F(4, 9)], [F(3, 4), F(1, 2)]]);
+      const R = div(A, B);
+      qs.push(mcFrac({
+        prompt: `${fr(A.n, A.d)} ${op(DIVS)} ${fr(B.n, B.d)} ${op('=')} ...`,
+        correct: R,
+        candidates: [mul(A, B), div(B, A), F(A.n * B.d, A.d * B.d * 2), add(A, B), F(R.n + 1, R.d)],
+        explain: divExplain(A, B), truth: val(A) / val(B)
+      })); }
+
+    // 5. Pecahan dari suatu jumlah
+    { const b = pick([3, 4, 5, 6, 8]), a = rand(1, b - 1), k = rand(2, 5), total = b * k;
+      const things = pick([['permen', 'butir'], ['jeruk', 'buah'], ['kelereng', 'butir'], ['buku', 'buah'], ['stiker', 'lembar']]);
+      qs.push(fillQ({
+        prompt: `Ada <b>${total}</b> ${things[0]}. Sebanyak ${fr(a, b)} dari ${things[0]} itu diberikan kepada adik. Berapa ${things[1]} ${things[0]} yang diberikan?`,
+        visual: '', kind: 'int', answer: a * k, truth: (a / b) * total, unit: things[1] + ' ' + things[0],
+        explain: `${fr(a, b)} dari ${total} = ${fr(a, b)} ${op(TIMES)} ${total}. Cara mudah: ${total} ÷ ${b} = ${k}, lalu ${k} × ${a} = <b>${a * k}</b>.`
+      })); }
+
+    // 6. Bagi pecahan dengan gambar
+    { const [A, n] = pick([[F(1, 2), 2], [F(1, 2), 3], [F(1, 3), 2], [F(3, 4), 3], [F(2, 3), 2], [F(3, 4), 2]]);
+      const R = div(A, F(n, 1)), nm = pickNames(1)[0];
+      qs.push(mcFrac({
+        prompt: `Sisa pizza ${fr(A.n, A.d)} bagian dibagi <b>sama rata</b> untuk ${n} anak. Tiap anak mendapat ... bagian pizza.`,
+        visual: fracVis('pizza', A.n, A.d, { w: 190 }),
+        correct: R, show: f => f,
+        candidates: [mul(A, F(n, 1)).d === 1 ? null : mul(A, F(n, 1)), F(A.n, A.d + n), F(A.n + n, A.d), F(1, n), F(R.n + 1, R.d)].filter(Boolean),
+        explain: `${fr(A.n, A.d)} ${op(DIVS)} ${n} = ${fr(A.n, A.d)} ${op(TIMES)} ${fr(1, n)} = ${frF(R)}. Tiap anak mendapat ${frF(R)} bagian.`, truth: val(A) / n
+      })); }
+    return qs;
+  }
+});
+
+/* ---------------- LEVEL 6 ---------------- */
+LEVELS.push({
+  id: 6, title: 'Misi Tantangan Pecahan', region: 'Istana Tantangan', color: 'pink', icon: 'crown',
+  topics: 'Soal cerita, campuran operasi, logika',
+  lesson: () => [
+    { title: 'Baca dengan cermat', text: '<ol class="tips"><li>Apa yang <b>diketahui</b>?</li><li>Apa yang <b>ditanyakan</b>?</li><li>Operasi apa yang dipakai: + − × atau ÷ ?</li><li>Periksa: apakah jawabannya masuk akal?</li></ol>', visual: '', cap: '' },
+    { title: 'Kata kunci', text: `<ul class="tips"><li><b>Total, seluruhnya, gabungan</b> → tambah (+)</li><li><b>Sisa, tinggal</b> → kurang (−)</li><li><b>Dari, kali, tiap</b> → kali (×)</li><li><b>Dibagi, sama rata</b> → bagi (÷)</li></ul>`, visual: '', cap: '' },
+    { title: 'Misi terakhir!', text: 'Sekarang gabungkan semua ilmumu. Kerjakan langkah demi langkah. Kamu pasti bisa menjadi <b>Pahlawan Negeri Pecahan</b>!', visual: mascot('cheer', 130), cap: '' }
+  ],
+  make() {
+    const qs = [];
+
+    // 1. Cerita: pengurangan
+    { const [A, B] = pick([[F(3, 4), F(1, 3)], [F(5, 6), F(1, 2)], [F(7, 8), F(1, 4)], [F(2, 3), F(1, 4)]]);
+      const R = sub(A, B);
+      qs.push(mcFrac({
+        prompt: `Ibu punya ${fr(A.n, A.d)} kg tepung. Untuk membuat kue dipakai ${fr(B.n, B.d)} kg. Berapa kg tepung yang tersisa?`,
+        correct: R, show: f => f,
+        candidates: [F(A.n - B.n || 1, A.d - B.d || 1), add(A, B), F(R.n + 1, R.d), F(R.n, R.d + 1)],
+        explain: commonDenExplain(A, B, '-'), truth: val(A) - val(B)
+      })); }
+
+    // 2. Cerita: pecahan dari jumlah
+    { const b = pick([3, 4, 5, 6, 8]), a = rand(1, b - 1), k = rand(2, 6), total = b * k, nm = pickNames(1)[0];
+      qs.push(fillQ({
+        prompt: `${nm} punya <b>${total}</b> kelereng. ${fr(a, b)} dari kelereng itu berwarna biru. Ada berapa kelereng biru?`,
+        visual: '', kind: 'int', answer: a * k, truth: (a / b) * total, unit: 'kelereng biru',
+        explain: `${fr(a, b)} dari ${total}: ${total} ÷ ${b} = ${k}, lalu ${k} × ${a} = <b>${a * k}</b> kelereng biru.`
+      })); }
+
+    // 3. Cerita: penjumlahan waktu
+    { const [A, B] = pick([[F(1, 3), F(1, 4)], [F(1, 2), F(1, 5)], [F(1, 4), F(1, 6)], [F(1, 3), F(1, 5)]]);
+      const R = add(A, B);
+      qs.push(fillQ({
+        prompt: `Rani belajar Matematika selama ${fr(A.n, A.d)} jam dan belajar IPA selama ${fr(B.n, B.d)} jam. Berapa jam waktu belajar Rani seluruhnya?`,
+        visual: '', kind: 'two', answer: R, exact: false, truth: val(A) + val(B), explain: commonDenExplain(A, B, '+')
+      })); }
+
+    // 4. Logika: cari bilangan yang hilang
+    { const [x, y, z] = pick([[F(1, 2), F(1, 4), F(3, 4)], [F(1, 3), F(1, 6), F(1, 2)], [F(1, 4), F(1, 2), F(3, 4)], [F(2, 5), F(1, 5), F(3, 5)], [F(1, 6), F(1, 3), F(1, 2)]]);
+      qs.push(fillQ({
+        prompt: `<b>Teka-teki:</b> Aku sebuah pecahan. Jika aku ditambah ${fr(y.n, y.d)}, hasilnya ${fr(z.n, z.d)}. Siapakah aku?`,
+        visual: '', kind: 'two', answer: x, exact: false, truth: val(z) - val(y),
+        explain: `Gunakan operasi kebalikan: ${fr(z.n, z.d)} ${op(MINUS)} ${fr(y.n, y.d)} = ${frF(x)}. Cek: ${frF(x)} ${op('+')} ${fr(y.n, y.d)} = ${fr(z.n, z.d)}.`
+      })); }
+
+    // 5. Dua langkah: sisa kelereng
+    { const sets = [[20, F(1, 4), F(2, 5)], [24, F(1, 3), F(3, 8)], [30, F(1, 2), F(1, 3)], [12, F(1, 2), F(1, 3)], [40, F(1, 4), F(1, 5)]];
+      const [T, A, B] = pick(sets), a = val(A) * T, b = val(B) * T, left = T - a - b;
+      qs.push(fillQ({
+        prompt: `Dalam kotak ada <b>${T}</b> kelereng. ${fr(A.n, A.d)} berwarna merah, ${fr(B.n, B.d)} berwarna biru, sisanya hijau. Berapa kelereng hijau?`,
+        visual: '', kind: 'int', answer: left, truth: T - T * val(A) - T * val(B), unit: 'kelereng hijau',
+        explain: `Merah: ${fr(A.n, A.d)} × ${T} = ${a}. Biru: ${fr(B.n, B.d)} × ${T} = ${b}. Hijau: ${T} − ${a} − ${b} = <b>${left}</b>.`
+      })); }
+
+    // 6. Cocokkan operasi dan hasil
+    { const pool = [
+        { l: `${fr(1, 2)} ${op('+')} ${fr(1, 3)}`, f: add(F(1, 2), F(1, 3)) },
+        { l: `${fr(2, 3)} ${op(MINUS)} ${fr(1, 6)}`, f: sub(F(2, 3), F(1, 6)) },
+        { l: `3 ${op(TIMES)} ${fr(1, 4)}`, f: mul(F(3, 1), F(1, 4)) },
+        { l: `${fr(1, 2)} ${op(DIVS)} ${fr(1, 4)}`, f: div(F(1, 2), F(1, 4)) },
+        { l: `${fr(3, 4)} ${op(MINUS)} ${fr(1, 2)}`, f: sub(F(3, 4), F(1, 2)) },
+        { l: `${fr(1, 3)} ${op(TIMES)} ${fr(3, 5)}`, f: mul(F(1, 3), F(3, 5)) },
+        { l: `${fr(1, 2)} ${op(DIVS)} 3`, f: div(F(1, 2), F(3, 1)) }
+      ];
+      const chosen = [];
+      shuffle(pool).forEach(p => { if (chosen.length < 3 && !chosen.some(c => eq(c.f, p.f))) chosen.push(p); });
+      qs.push(matchQ({
+        prompt: 'Hitung dalam hati, lalu cocokkan setiap soal dengan hasilnya!',
+        pairs: chosen.map(c => ({ l: c.l, r: frF(c.f) })),
+        explain: 'Tambah/kurang: samakan penyebut. Kali: pembilang × pembilang, penyebut × penyebut. Bagi: kali kebalikan.'
+      })); }
+
+    // 7. Cerita pembagian
+    { if (Math.random() < 0.5) {
+        const [A, B] = pick([[F(1, 2), F(1, 8)], [F(3, 4), F(1, 4)], [F(2, 3), F(1, 6)], [F(3, 4), F(3, 8)]]);
+        const R = div(A, B);
+        qs.push(fillQ({
+          prompt: `Ada ${fr(A.n, A.d)} loyang kue. Setiap porsi adalah ${fr(B.n, B.d)} loyang. Berapa porsi yang bisa dibuat?`,
+          visual: '', kind: 'int', answer: R.n, truth: val(A) / val(B), unit: 'porsi',
+          explain: `Banyak porsi = ${fr(A.n, A.d)} ${op(DIVS)} ${fr(B.n, B.d)} = ${fr(A.n, A.d)} ${op(TIMES)} ${fr(B.d, B.n)} = <b>${R.n}</b> porsi.`
+        }));
+      } else {
+        const [A, n] = pick([[F(3, 4), 3], [F(2, 3), 2], [F(3, 5), 3], [F(1, 2), 2]]);
+        const R = div(A, F(n, 1));
+        qs.push(mcFrac({
+          prompt: `Pita sepanjang ${fr(A.n, A.d)} meter dipotong menjadi ${n} bagian sama panjang. Berapa meter panjang tiap potongan?`,
+          correct: R, show: f => f,
+          candidates: [mul(A, F(n, 1)), F(A.n, A.d + n), F(A.n + n, A.d), F(R.n + 1, R.d)].filter(f => !isWhole(f)),
+          explain: `${fr(A.n, A.d)} ${op(DIVS)} ${n} = ${fr(A.n, A.d)} ${op(TIMES)} ${fr(1, n)} = ${frF(R)} meter.`, truth: val(A) / n
+        }));
+      } }
+    return qs;
+  }
+});
+/* ============================================================
+   UI: ikon, toolbar, layar menu / panduan / peta / materi / rekap
+   ============================================================ */
+const ICON = {
+  home: '<svg viewBox="0 0 24 24"><path d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" fill="#ff8a3d" stroke="#2a2750" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+  back: '<svg viewBox="0 0 24 24"><path d="M15 5 8 12l7 7" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  music: '<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke="#7b5cff" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3" fill="#7b5cff"/><circle cx="16.5" cy="16" r="3" fill="#7b5cff"/></svg>',
+  musicOff: '<svg viewBox="0 0 24 24"><path d="M9 18V6l10-2v12" fill="none" stroke="#9a98b8" stroke-width="2.2" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="3" fill="#9a98b8"/><circle cx="16.5" cy="16" r="3" fill="#9a98b8"/><path d="M3 3l18 18" stroke="#ff6b6b" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  sound: '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="#3b8cff"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="#3b8cff" stroke-width="2.2" stroke-linecap="round"/></svg>',
+  soundOff: '<svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9z" fill="#9a98b8"/><path d="M3 3l18 18" stroke="#ff6b6b" stroke-width="2.6" stroke-linecap="round"/></svg>',
+  star: '<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z" fill="#ffc21a" stroke="#d68500" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  coin: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#ffc21a" stroke="#d68500" stroke-width="1.8"/><circle cx="12" cy="12" r="6.5" fill="none" stroke="#d68500" stroke-width="1.4"/><path d="M12 8v8M9.5 10.2h4a1.4 1.4 0 0 1 0 2.8h-3a1.4 1.4 0 0 0 0 2.8h4" fill="none" stroke="#a86500" stroke-width="1.4" stroke-linecap="round"/></svg>',
+  lock: '<svg viewBox="0 0 24 24"><rect x="4.5" y="10.5" width="15" height="10" rx="3" fill="#9a98b8"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" fill="none" stroke="#6d6a92" stroke-width="2.4"/></svg>',
+  bulb: '<svg viewBox="0 0 24 24"><path d="M12 3a6.5 6.5 0 0 0-3.6 11.9c.6.5 1 1.2 1 2V18h5.2v-1.1c0-.8.4-1.5 1-2A6.5 6.5 0 0 0 12 3z" fill="#ffd84d" stroke="#d68500" stroke-width="1.6"/><path d="M9.8 21h4.4" stroke="#d68500" stroke-width="2" stroke-linecap="round"/></svg>',
+  replay: '<svg viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5" fill="none" stroke="#2a2750" stroke-width="2.6" stroke-linecap="round"/><path d="M4 3.5v4.8h4.8" fill="none" stroke="#2a2750" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  trophy: '<svg viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0z" fill="#ffc21a" stroke="#d68500" stroke-width="1.6"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5A3.5 3.5 0 0 1 16.5 11" fill="none" stroke="#d68500" stroke-width="1.6"/><path d="M12 14v3.5M8 21h8M9 17.5h6v3.5H9z" fill="#ffc21a" stroke="#d68500" stroke-width="1.6" stroke-linejoin="round"/></svg>',
+  play: '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z" fill="currentColor"/></svg>',
+  map: '<svg viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="#cff5df" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></svg>',
+  book: '<svg viewBox="0 0 24 24"><path d="M4 5.5C7 4 9.5 4.3 12 6c2.5-1.7 5-2 8-.5V19c-3-1.5-5.500-1.200-8 .5-2.500-1.700-5-2-8-.5z" fill="#fff3b0" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 6v13.500" stroke="currentColor" stroke-width="2"/></svg>',
+  check: '<svg viewBox="0 0 24 24"><path d="M5 12.500l4.500 4.500L19 7" fill="none" stroke="currentColor" stroke-width="3.600" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const starSvg = on => `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="${on ? 'star-on' : 'star-off'}" d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>`;
+const starsRow = (n, total = 3) => `<span class="stars" role="img" aria-label="${n} dari ${total} bintang">${Array.from({ length: total }, (_, i) => starSvg(i < n)).join('')}</span>`;
+
+const REGION_ART = {
+  pizza: () => fracVis('pizza', 3, 8, { w: 90 }),
+  bars: () => `<div class="stack-bars" style="gap:6px">${fracVis('bar', 1, 2, { w: 120 })}${fracVis('bar', 2, 4, { w: 120 })}</div>`,
+  scale: () => '<svg viewBox="0 0 120 90" width="120" height="90"><path d="M60 14v62M36 80h48" stroke="#2a2750" stroke-width="5" stroke-linecap="round"/><path d="M18 30h84" stroke="#2a2750" stroke-width="5" stroke-linecap="round"/><path d="M18 30 6 54h24zM102 30 90 54h24z" fill="#ffd84d" stroke="#2a2750" stroke-width="3.500" stroke-linejoin="round"/><circle cx="60" cy="14" r="6" fill="#ff6b6b" stroke="#2a2750" stroke-width="3"/></svg>',
+  plus: () => '<svg viewBox="0 0 120 90" width="120" height="90"><rect x="8" y="14" width="46" height="46" rx="14" fill="#ffb000" stroke="#2a2750" stroke-width="3.500"/><path d="M31 24v26M18 37h26" stroke="#fff" stroke-width="7" stroke-linecap="round"/><rect x="66" y="30" width="46" height="46" rx="14" fill="#3b8cff" stroke="#2a2750" stroke-width="3.500"/><path d="M78 53h22" stroke="#fff" stroke-width="7" stroke-linecap="round"/></svg>',
+  times: () => '<svg viewBox="0 0 120 90" width="120" height="90"><rect x="8" y="14" width="46" height="46" rx="14" fill="#7b5cff" stroke="#2a2750" stroke-width="3.500"/><path d="M20 26l22 22M42 26 20 48" stroke="#fff" stroke-width="7" stroke-linecap="round"/><rect x="66" y="30" width="46" height="46" rx="14" fill="#ff6b6b" stroke="#2a2750" stroke-width="3.500"/><circle cx="89" cy="43" r="4.500" fill="#fff"/><circle cx="89" cy="64" r="4.500" fill="#fff"/><path d="M76 53.500h26" stroke="#fff" stroke-width="6" stroke-linecap="round"/></svg>',
+  crown: () => '<svg viewBox="0 0 120 90" width="120" height="90"><path d="M16 70 10 24l30 22 20-30 20 30 30-22-6 46z" fill="#ffc21a" stroke="#2a2750" stroke-width="3.500" stroke-linejoin="round"/><rect x="16" y="70" width="88" height="10" rx="4" fill="#ff8a3d" stroke="#2a2750" stroke-width="3.500"/><circle cx="60" cy="52" r="6" fill="#ff6b6b" stroke="#2a2750" stroke-width="3"/><circle cx="34" cy="56" r="4" fill="#3b8cff" stroke="#2a2750" stroke-width="2.500"/><circle cx="86" cy="56" r="4" fill="#3b8cff" stroke="#2a2750" stroke-width="2.500"/></svg>'
+};
+
+/* ---------- Navigasi layar ---------- */
+const UI = PNP.ui = { current: 'menu' };
+const screenEl = () => $('#screen');
+function go(name, data) {
+  UI.current = name;
+  closeOverlay();
+  const el = screenEl();
+  el.innerHTML = '';
+  const html = SCREENS[name](data);
+  el.appendChild(h(`<div class="screen" id="screen-${name}">${html}</div>`));
+  renderToolbar();
+  window.scrollTo(0, 0);
+  if (SCREENS_AFTER[name]) SCREENS_AFTER[name](data);
+}
+
+function renderToolbar() {
+  const s = Save.data.settings;
+  const bar = $('#toolbar');
+  const onMenu = UI.current === 'menu', inPlay = UI.current === 'play';
+  bar.innerHTML = `
+    ${onMenu ? '' : `<button class="round-btn" data-act="${inPlay ? 'quit' : 'menu'}" aria-label="Kembali ke menu utama" title="Menu utama">${ICON.home}</button>`}
+    <span class="grow"></span>
+    <span class="pill" title="Koin">${ICON.coin.replace('<svg', '<svg class="ico"')}<b id="coin-n">${Save.data.coins}</b></span>
+    <span class="pill" title="Bintang">${ICON.star.replace('<svg', '<svg class="ico"')}<b>${Save.totalStars()}/18</b></span>
+    <button class="round-btn ${s.music ? '' : 'off'}" data-act="toggle-music" aria-pressed="${s.music}" aria-label="Musik latar ${s.music ? 'menyala' : 'mati'}" title="Musik">${s.music ? ICON.music : ICON.musicOff}</button>
+    <button class="round-btn ${s.sfx ? '' : 'off'}" data-act="toggle-sfx" aria-pressed="${s.sfx}" aria-label="Efek suara ${s.sfx ? 'menyala' : 'mati'}" title="Efek suara">${s.sfx ? ICON.sound : ICON.soundOff}</button>`;
+}
+
+const nextLevelToPlay = () => { for (let n = 1; n <= 6; n++) if (!Save.isDone(n)) return n; return null; };
+
+/* ---------- Layar ---------- */
+const SCREENS = {}, SCREENS_AFTER = {};
+
+SCREENS.menu = () => {
+  const next = nextLevelToPlay(), started = Save.doneCount() > 0 || Object.keys(Save.data.levels).length > 0;
+  return `<div class="menu">
+    <div class="menu-hero">
+      <span class="kicker">Matematika Kelas 5 SD · Bilangan Pecahan</span>
+      <h1 class="game-title">Petualangan <span class="w2">Negeri</span><span class="w3">Pecahan</span></h1>
+      <div class="menu-btns">
+        <button class="btn green block" data-act="start" style="font-size:26px;min-height:68px">${ICON.play} Mulai Petualangan</button>
+        <button class="btn blue block" data-act="guide">${ICON.book} Panduan Bermain</button>
+        <button class="btn block" data-act="levels">${ICON.map} Pilih Level</button>
+        <button class="btn grape block" data-act="recap">${ICON.trophy} Pencapaian &amp; Rekap</button>
+      </div>
+      <div class="menu-stats">
+        <span class="pill">${ICON.trophy.replace('<svg', '<svg class="ico"')} Total skor <b>${Save.totalScore()}</b></span>
+        <span class="pill">${ICON.map.replace('<svg', '<svg class="ico"')} Level ${Save.doneCount()}/6</span>
+        ${started && next ? `<span class="pill">Berikutnya: Level ${next}</span>` : ''}
+      </div>
+    </div>
+    <div class="menu-art" aria-hidden="true">
+      <div class="blob"></div>
+      <div class="float-vis v1">${fracVis('pizza', 3, 8, { w: 120 })}</div>
+      <div class="float-vis v2">${fracVis('cake', 2, 4, { w: 130 })}</div>
+      <div class="float-vis v3">${fracVis('choc', 3, 6, { w: 130 })}</div>
+      <div class="mascot-wrap">${mascot('happy', 250)}</div>
+    </div>
+  </div>`;
+};
+
+SCREENS.guide = () => `
+  <div class="card tint-sky">
+    <div class="title-row"><h2>Panduan Bermain</h2></div>
+    <p class="sub">Jelajahi 6 wilayah Negeri Pecahan bersama Pipi si Petualang!</p>
+    <div class="guide-grid">
+      ${[
+        ['Pilih wilayah', 'Mulai dari Level 1. Level berikutnya terbuka setelah kamu lulus level sebelumnya.'],
+        ['Baca materi singkat', 'Sebelum soal, Pipi menjelaskan inti materinya. Tombol lampu <b>Materi</b> bisa dibuka lagi saat bermain.'],
+        ['Jawab soal', 'Ada pilihan ganda, mencocokkan, mengisi, mengurutkan, dan mengarsir gambar. Tekan <b>Periksa</b> setelah menjawab.'],
+        ['Belajar dari penjelasan', 'Jika jawabanmu belum tepat, Pipi menunjukkan cara mendapatkan jawaban yang benar.'],
+        ['Kumpulkan hadiah', 'Dapatkan bintang, koin, dan medali. Selesaikan semua level untuk gelar <b>Pahlawan Negeri Pecahan</b>.']
+      ].map((g, i) => `<div class="guide-step"><span class="gnum">${i + 1}</span><div><h3>${g[0]}</h3><p>${g[1]}</p></div></div>`).join('')}
+    </div>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <h3 style="font-size:26px">Penilaian</h3>
+    <table class="score-table"><tbody>
+      <tr><th>Jawaban benar</th><td>+10 poin</td></tr>
+      <tr><th>Jawaban salah</th><td>0 poin (ada penjelasan)</td></tr>
+      <tr><th>1 bintang</th><td>Minimal setengah soal benar (level terbuka)</td></tr>
+      <tr><th>2 bintang</th><td>Sekitar dua pertiga soal benar</td></tr>
+      <tr><th>3 bintang</th><td>Hampir semua soal benar</td></tr>
+      <tr><th>Koin</th><td>10 koin saat pertama lulus + 10 koin tiap tambahan bintang</td></tr>
+    </tbody></table>
+    <div class="action-row">
+      <button class="btn green" data-act="start">${ICON.play} Mulai Petualangan</button>
+      <button class="btn ghost" data-act="menu">Kembali ke Menu</button>
+    </div>
+  </div>`;
+
+SCREENS.levels = () => {
+  const done = Save.doneCount(), cur = nextLevelToPlay();
+  const tiles = LEVELS.map(L => {
+    const info = Save.levelInfo(L.id), open = Save.isUnlocked(L.id);
+    return `<button class="region ${cur === L.id ? 'current' : ''}" style="--tint:var(--${L.color})" data-act="open-level" data-level="${L.id}" ${open ? '' : 'disabled'} aria-label="Level ${L.id}: ${L.title}. ${open ? info.stars + ' bintang' : 'Terkunci'}">
+      <span class="rnum">${L.id}</span>
+      ${open ? '' : `<span class="lock">${ICON.lock}</span>`}
+      <div class="rart">${REGION_ART[L.icon]()}</div>
+      <h3>${L.title}</h3>
+      <div class="rreg">${L.region}</div>
+      <div class="rtopic">${L.topics}</div>
+      <div class="rstate">${open ? starsRow(info.stars) + (info.stars ? '' : '<span class="go">Mulai</span>') : `<span class="go">Selesaikan Level ${L.id - 1}</span>`}</div>
+    </button>`;
+  }).join('');
+  return `<div class="title-row">
+      <h2>Peta Negeri Pecahan</h2>
+      <div class="progress-wrap"><div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="6" aria-valuenow="${done}"><i style="width:${done / 6 * 100}%"></i></div><span class="sub">Progres petualangan: ${done} dari 6 wilayah selesai</span></div>
+      <button class="btn ghost small" data-act="menu">Menu Utama</button>
+    </div>
+    <div class="map">${tiles}</div>`;
+};
+
+/* ---------- Materi sebelum level ---------- */
+const lessonState = { level: 1, i: 0 };
+function lessonHtml(L, i, inModal) {
+  const slides = L.lesson(), s = slides[i], last = i === slides.length - 1;
+  const art = s.visual ? `<div class="lesson-art">${s.visual}${s.cap ? `<div class="cap">${s.cap}</div>` : ''}</div>` : `<div class="lesson-art">${mascot('happy', 150)}</div>`;
+  return `<div class="lesson">
+    <div class="title-row"><span class="kicker">Level ${L.id} · ${L.region}</span><h2>${L.title}</h2></div>
+    <div class="card tint-${L.color} lesson-card">
+      <div><h3>${s.title}</h3><div class="lesson-text">${s.text}</div></div>
+      ${art}
+    </div>
+    <div class="dots" aria-hidden="true">${slides.map((_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</div>
+    <div class="lesson-nav">
+      <button class="btn ghost small" data-act="${inModal ? 'close-overlay' : 'levels'}">${inModal ? 'Tutup' : 'Peta Level'}</button>
+      <span style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn blue small" data-act="lesson-prev" ${i === 0 ? 'disabled' : ''}>Sebelumnya</button>
+        ${last
+          ? (inModal ? `<button class="btn green small" data-act="close-overlay">Lanjut Bermain</button>` : `<button class="btn green" data-act="begin-level" data-level="${L.id}">${ICON.play} Mulai Soal!</button>`)
+          : `<button class="btn green small" data-act="lesson-next">Lanjut</button>`}
+      </span>
+    </div>
+    ${!last && !inModal ? `<div style="text-align:center"><button class="btn ghost small" data-act="begin-level" data-level="${L.id}">Lewati materi</button></div>` : ''}
+  </div>`;
+}
+SCREENS.lesson = ({ level, i = 0 }) => { lessonState.level = level; lessonState.i = i; return lessonHtml(LEVELS[level - 1], i, false); };
+function lessonStep(delta) {
+  const L = LEVELS[lessonState.level - 1], max = L.lesson().length - 1;
+  lessonState.i = Math.max(0, Math.min(max, lessonState.i + delta));
+  const inModal = !!$('#overlay-root .sheet.lesson-modal');
+  if (inModal) $('#overlay-root .lesson-modal').innerHTML = lessonHtml(L, lessonState.i, true);
+  else go('lesson', { level: lessonState.level, i: lessonState.i });
+  Audio_.play('click');
+}
+
+/* ---------- Rekap nilai & pencapaian ---------- */
+const BADGES = [
+  { id: 'first', name: 'Langkah Pertama', desc: 'Selesaikan Level 1', icon: 'check', test: () => Save.isDone(1) },
+  { id: 'star3', name: 'Bintang Cemerlang', desc: 'Raih 3 bintang di satu level', icon: 'star', test: () => Object.values(Save.data.levels).some(l => l.stars === 3) },
+  { id: 'perfect', name: 'Skor Sempurna', desc: 'Jawab semua soal benar dalam satu level', icon: 'trophy', test: () => Object.values(Save.data.levels).some(l => l.total && l.correct === l.total) },
+  { id: 'streak5', name: 'Jago Beruntun', desc: '5 jawaban benar berturut-turut', icon: 'bulb', test: () => Save.data.stats.bestStreak >= 5 },
+  { id: 'stars9', name: 'Kolektor Bintang', desc: 'Kumpulkan 9 bintang', icon: 'star', test: () => Save.totalStars() >= 9 },
+  { id: 'coins60', name: 'Juragan Koin', desc: 'Kumpulkan 60 koin', icon: 'coin', test: () => Save.data.coins >= 60 },
+  { id: 'hero', name: 'Pahlawan Negeri Pecahan', desc: 'Selesaikan semua 6 level', icon: 'trophy', test: () => Save.doneCount() === 6 }
+];
+const badgeHtml = (b, unlocked) => `<div class="badge ${unlocked ? '' : 'locked'}"><span class="medal">${ICON[b.icon]}</span><div><b>${b.name}</b><small>${b.desc}</small></div></div>`;
+
+SCREENS.recap = () => {
+  const st = Save.data.stats, acc = st.answered ? Math.round(st.correct / st.answered * 100) : 0;
+  const rows = LEVELS.map(L => {
+    const i = Save.levelInfo(L.id), open = Save.isUnlocked(L.id);
+    return `<tr><td><b>Level ${L.id}</b> · ${L.title}</td><td>${starsRow(i.stars)}</td><td>${i.best}</td><td>${i.total ? i.correct + '/' + i.total : '-'}</td><td>${i.stars ? 'Selesai' : open ? 'Belum selesai' : 'Terkunci'}</td></tr>`;
+  }).join('');
+  return `<div class="title-row"><h2>Rekap Nilai</h2><span class="grow" style="flex:1"></span><button class="btn ghost small" data-act="menu">Menu Utama</button></div>
+    <div class="recap-tiles">
+      <div class="stat"><b>${Save.totalScore()}</b><span>Total skor terbaik</span></div>
+      <div class="stat"><b>${Save.totalStars()}/18</b><span>Bintang</span></div>
+      <div class="stat"><b>${Save.data.coins}</b><span>Koin</span></div>
+      <div class="stat"><b>${acc}%</b><span>Ketepatan menjawab (${st.correct}/${st.answered})</span></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3 style="font-size:26px;margin-bottom:8px">Hasil per level</h3>
+      <div class="table-wrap"><table class="recap-table"><thead><tr><th>Level</th><th>Bintang</th><th>Skor terbaik</th><th>Benar</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></div>
+    </div>
+    <div class="card" style="margin-top:14px"><h3 style="font-size:26px">Medali &amp; Penghargaan</h3>
+      <div class="badge-grid">${BADGES.map(b => badgeHtml(b, Save.data.badges.includes(b.id))).join('')}</div>
+    </div>
+    <div class="card" style="margin-top:14px" id="reset-zone">
+      <div class="action-row" style="margin-top:0">
+        <button class="btn green" data-act="levels">${ICON.map} Pilih Level</button>
+        <button class="btn coral small" data-act="reset-ask">Hapus Semua Progres</button>
+      </div>
+    </div>`;
+};
+
+/* ---------- Overlay, konfirmasi, toast ---------- */
+function openOverlay(inner, cls = '') {
+  const root = $('#overlay-root');
+  root.innerHTML = `<div class="overlay" role="dialog" aria-modal="true"><div class="sheet ${cls}">${inner}</div></div>`;
+  const first = $('button, input', root); if (first) setTimeout(() => first.focus({ preventScroll: true }), 30);
+  return root;
+}
+function closeOverlay() { const r = $('#overlay-root'); if (r) r.innerHTML = ''; }
+function confirmBox({ title, text, yes = 'Ya', no = 'Batal' }) {
+  return new Promise(res => {
+    openOverlay(`<h3 style="font-size:30px">${title}</h3><p>${text}</p>
+      <div class="confirm"><button class="btn coral small" id="cf-yes">${yes}</button><button class="btn ghost small" id="cf-no">${no}</button></div>`, 'bad');
+    $('#cf-yes').onclick = () => { closeOverlay(); res(true); };
+    $('#cf-no').onclick = () => { closeOverlay(); res(false); };
+  });
+}
+function toast(msg) {
+  const t = h(`<div class="toast" role="status">${msg}</div>`);
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+function confetti(n = 36) {
+  if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const colors = ['#ffb000', '#ff6b6b', '#2fc476', '#3b8cff', '#7b5cff', '#ff8fb8'];
+  for (let i = 0; i < n; i++) {
+    const c = document.createElement('i');
+    c.className = 'confetti';
+    c.style.left = Math.random() * 100 + 'vw';
+    c.style.background = pick(colors);
+    c.style.animationDelay = Math.random() * 0.5 + 's';
+    c.style.animationDuration = 1.2 + Math.random() * 1.2 + 's';
+    c.style.borderRadius = Math.random() < 0.4 ? '50%' : '3px';
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3200);
+  }
+}
+/* ============================================================
+   Mesin permainan: render soal, periksa jawaban, umpan balik
+   ============================================================ */
+const G = PNP.G = { level: 0, qs: [], i: 0, score: 0, correct: 0, results: [], streak: 0, bestStreak: 0, locked: false, cur: {} };
+const TYPE_LABEL = { mc: 'Pilihan ganda', fill: 'Isi jawaban', match: 'Cocokkan pasangan', order: 'Urutkan', shade: 'Arsir gambar' };
+const PRAISE = ['Hebat sekali!', 'Tepat sekali!', 'Mantap, kamu pintar!', 'Luar biasa!', 'Keren, jawabanmu benar!', 'Yey, benar!'];
+const ENCOURAGE = ['Hampir tepat!', 'Belum tepat, ayo kita pelajari!', 'Tidak apa-apa, belajar dari sini!', 'Ayo coba pahami caranya!'];
+const PAIR_COLORS = ['#3b8cff', '#ff8a3d', '#2fc476', '#7b5cff', '#ff6b9a'];
+
+function startLevel(n) {
+  G.level = n; G.qs = LEVELS[n - 1].make(); G.i = 0; G.score = 0; G.correct = 0;
+  G.results = []; G.streak = 0; G.bestStreak = 0; G.locked = false; G.cur = {};
+  go('play');
+}
+
+SCREENS.play = () => {
+  const L = LEVELS[G.level - 1];
+  return `<div class="hud">
+      <button class="round-btn" data-act="show-lesson" aria-label="Buka materi" title="Materi">${ICON.bulb}</button>
+      <div class="hud-mid"><div class="hud-title">Level ${L.id} · ${L.title}</div><div class="qdots" id="qdots"></div></div>
+      <div class="hud-right">
+        <span class="pill score-pill" id="score-pill">${ICON.star.replace('<svg', '<svg class="ico"')} Skor <b id="score-n">${G.score}</b></span>
+        <button class="round-btn" data-act="restart-level" aria-label="Ulangi level dari awal" title="Ulangi level">${ICON.replay}</button>
+      </div>
+    </div>
+    <div class="card qcard" id="qcard"></div>`;
+};
+SCREENS_AFTER.play = () => renderQuestion();
+
+function renderQdots() {
+  $('#qdots').innerHTML = G.qs.map((_, k) => {
+    const r = G.results[k];
+    return `<i class="${r === undefined ? (k === G.i ? 'now' : '') : r ? 'ok' : 'bad'}"></i>`;
+  }).join('');
+}
+
+function renderQuestion() {
+  const q = G.qs[G.i];
+  G.locked = false;
+  G.cur = {};
+  renderQdots();
+  $('#score-n').textContent = G.score;
+  let body = '';
+  const inline = q.type === 'fill' && q.prompt.includes('{{input}}');
+  const prompt = q.prompt.replace('{{input}}', '<input class="num-in inline" id="in-int" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Jawaban">');
+
+  if (q.type === 'mc') {
+    body = `<div class="answers ${q.layout === 'row' ? 'row' : ''}">${q.options.map((o, k) => `<button class="opt" data-act="pick-opt" data-k="${k}">${o.html}</button>`).join('')}</div>`;
+  } else if (q.type === 'fill') {
+    if (q.kind === 'int') {
+      body = inline ? '' : `<div class="fill-area"><input class="num-in" id="in-int" inputmode="numeric" maxlength="4" autocomplete="off" aria-label="Jawaban"><span class="unit-label">${q.unit || ''}</span></div>`;
+    } else {
+      body = `<div class="fill-area"><span class="frin-label">Tulis pecahannya:</span>
+        <div class="frin"><input class="num-in" id="in-n" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Pembilang (atas)"><i class="bar"></i><input class="num-in" id="in-d" inputmode="numeric" maxlength="3" autocomplete="off" aria-label="Penyebut (bawah)"></div></div>`;
+    }
+  } else if (q.type === 'match') {
+    G.cur.map = {}; G.cur.selL = null;
+    G.cur.rightOrder = shuffle(q.pairs.map((_, k) => k));
+    body = `<div class="match"><div class="match-col" id="mcL">${q.pairs.map((p, k) => `<button class="mitem" data-act="m-left" data-k="${k}">${p.l}</button>`).join('')}</div>
+      <div class="match-col" id="mcR">${G.cur.rightOrder.map((k, pos) => `<button class="mitem" data-act="m-right" data-pos="${pos}">${q.pairs[k].r}</button>`).join('')}</div></div>
+      <p class="shade-note">Ketuk satu kartu di kiri, lalu pasangannya di kanan. Ketuk lagi untuk membatalkan.</p>`;
+  } else if (q.type === 'order') {
+    G.cur.seq = [];
+    body = `<div class="order-zone"><div class="order-tray" id="tray"></div><div class="order-bank" id="bank"></div></div>`;
+  } else if (q.type === 'shade') {
+    body = `<div class="qvisual">${emptyVis(q.kind, q.d, { w: 250, interactive: true })}</div><p class="shade-note" id="shade-note">Bagian berwarna: <b id="shade-n">0</b> dari ${q.d}</p>`;
+  }
+
+  $('#qcard').innerHTML = `
+    <div class="qhead"><span>Soal ${G.i + 1} dari ${G.qs.length}</span><span class="qtype">${TYPE_LABEL[q.type]}</span></div>
+    <div class="qprompt">${prompt}</div>
+    ${q.visual ? `<div class="qvisual">${q.visual}</div>` : ''}
+    ${body}
+    <div class="q-actions">
+      <button class="btn ghost small" data-act="reset-q">${ICON.replay.replace('<svg', '<svg style="width:22px;height:22px"')} Ulang soal</button>
+      <button class="btn green" id="check-btn" data-act="check" disabled>${ICON.check} Periksa</button>
+    </div>`;
+  if (q.type === 'order') renderOrder();
+  syncCheck();
+  const first = $('#in-int') || $('#in-n');
+  if (first && window.innerWidth > 700) first.focus({ preventScroll: true });
+}
+
+/* ---------- Status tombol Periksa ---------- */
+function isReady() {
+  const q = G.qs[G.i];
+  if (q.type === 'mc') return G.cur.sel !== undefined;
+  if (q.type === 'fill') {
+    if (q.kind === 'int') return ($('#in-int') || {}).value !== '' && ($('#in-int') || {}).value !== undefined;
+    return $('#in-n').value !== '' && $('#in-d').value !== '';
+  }
+  if (q.type === 'match') return Object.keys(G.cur.map).length === q.pairs.length;
+  if (q.type === 'order') return G.cur.seq.length === q.items.length;
+  if (q.type === 'shade') return $$('.vis .cell.on').length > 0;
+  return false;
+}
+function syncCheck() { const b = $('#check-btn'); if (b) b.disabled = G.locked || !isReady(); }
+
+/* ---------- Urutan ---------- */
+function renderOrder() {
+  const q = G.qs[G.i], seq = G.cur.seq;
+  $('#tray').innerHTML = seq.length
+    ? seq.map((id, pos) => `<button class="ocard placed" data-act="o-remove" data-id="${id}"><span class="tag">${pos + 1}</span>${q.items.find(x => x.id === id).html}</button>`).join('')
+    : '<span class="hint">Ketuk pecahan di bawah, mulai dari yang terkecil.</span>';
+  $('#bank').innerHTML = q.items.filter(it => !seq.includes(it.id)).map(it => `<button class="ocard" data-act="o-add" data-id="${it.id}">${it.html}</button>`).join('');
+  syncCheck();
+}
+
+/* ---------- Periksa jawaban ---------- */
+const parseNum = s => { const v = parseInt(String(s).trim(), 10); return Number.isFinite(v) ? v : NaN; };
+
+function evaluate(q) {
+  let ok = false, note = '';
+  if (q.type === 'mc') {
+    ok = G.cur.sel === q.answer;
+    $$('.opt').forEach((el, k) => { el.disabled = true; if (k === q.answer) el.classList.add('right'); else if (k === G.cur.sel) el.classList.add('wrong'); });
+  } else if (q.type === 'fill') {
+    if (q.kind === 'int') {
+      const el = $('#in-int'), v = parseNum(el.value);
+      ok = v === q.answer; el.classList.add(ok ? 'ok' : 'bad'); el.disabled = true;
+    } else {
+      const nEl = $('#in-n'), dEl = $('#in-d'), n = parseNum(nEl.value), d = parseNum(dEl.value);
+      if (Number.isFinite(n) && Number.isFinite(d) && d > 0) {
+        const same = n === q.answer.n && d === q.answer.d;
+        const equal = eq(F(n, d), q.answer);
+        ok = q.exact ? same : equal;
+        if (!ok && equal) note = 'Nilainya sudah sama, tetapi bentuknya belum seperti yang diminta soal.';
+        if (ok && !q.exact && !same && simp(F(n, d)).d !== d) note = `Bisa disederhanakan menjadi ${frF(simp(F(n, d)))}.`;
+        if (ok && !q.exact && !same && simp(F(n, d)).d === d) note = '';
+      }
+      [nEl, dEl].forEach(e => { e.classList.add(ok ? 'ok' : 'bad'); e.disabled = true; });
+    }
+  } else if (q.type === 'match') {
+    ok = true;
+    $$('#mcL .mitem').forEach((el, k) => {
+      const pos = G.cur.map[k], right = G.cur.rightOrder[pos] === k;
+      if (!right) ok = false;
+      el.classList.add(right ? 'right' : 'wrong'); el.disabled = true;
+    });
+    $$('#mcR .mitem').forEach(el => { el.disabled = true; });
+  } else if (q.type === 'order') {
+    ok = G.cur.seq.every((id, k) => id === q.correctOrder[k]);
+    $$('#tray .ocard').forEach((el, k) => { el.classList.add(G.cur.seq[k] === q.correctOrder[k] ? 'right' : 'wrong'); el.disabled = true; });
+  } else if (q.type === 'shade') {
+    const on = $$('.vis .cell.on').length;
+    ok = on === q.n;
+    $$('.vis .cell').forEach(c => c.style.pointerEvents = 'none');
+    if (!ok) note = `Kamu mewarnai ${on} bagian, padahal seharusnya ${q.n} bagian.`;
+  }
+  return { ok, note };
+}
+
+function correctAnswerHtml(q) {
+  if (q.type === 'mc') return `<span class="fb-ans">${q.options[q.answer].html}</span>`;
+  if (q.type === 'fill') return `<span class="fb-ans">${q.kind === 'int' ? `<b class="whole">${q.answer}</b> ${q.unit || ''}` : frF(q.answer)}</span>`;
+  if (q.type === 'order') return `<span class="fb-ans">${q.correctOrder.map(id => q.items.find(x => x.id === id).html).join(' ' + op('&lt;') + ' ')}</span>`;
+  if (q.type === 'shade') return `<span class="fb-ans">${fr(q.n, q.d)} = ${q.n} bagian berwarna dari ${q.d} bagian</span>`;
+  if (q.type === 'match') return `<div style="display:grid;gap:6px;margin-top:6px">${q.pairs.map(p => `<div style="display:flex;align-items:center;gap:10px"><span class="fb-ans" style="margin:0;transform:scale(.7);transform-origin:left center">${p.l}</span><b>=</b><span class="fb-ans" style="margin:0">${p.r}</span></div>`).join('')}</div>`;
+  return '';
+}
+
+function checkAnswer() {
+  if (G.locked) return;
+  const q = G.qs[G.i];
+  if (!isReady()) return;
+  G.locked = true; syncCheck();
+  const { ok, note } = evaluate(q);
+  G.results[G.i] = ok;
+  Save.data.stats.answered++;
+  if (ok) {
+    G.score += 10; G.correct++; G.streak++; G.bestStreak = Math.max(G.bestStreak, G.streak); Save.data.stats.correct++;
+    const pill = $('#score-pill'); $('#score-n').textContent = G.score; pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump');
+    Audio_.play('correct'); confetti(26);
+  } else { G.streak = 0; Audio_.play('wrong'); }
+  Save.data.stats.bestStreak = Math.max(Save.data.stats.bestStreak, G.bestStreak);
+  Save.write();
+  renderQdots();
+  const last = G.i === G.qs.length - 1;
+  const nextBtn = `<button class="btn ${ok ? 'green' : 'blue'}" data-act="next-q" id="next-btn">${last ? 'Lihat Hasil' : 'Soal Berikutnya'} ${ICON.play}</button>`;
+  if (ok) {
+    openOverlay(`<div class="fb-head">${mascot('cheer', 96)}<div><h3>${pick(PRAISE)}</h3><span class="plus">+10 poin · Skor ${G.score}</span></div></div>
+      ${note ? `<div class="fb-box"><span class="label">Catatan Pipi</span>${note}</div>` : ''}
+      ${G.streak >= 3 ? `<div class="fb-box"><span class="label">Beruntun!</span>${G.streak} jawaban benar berturut-turut.</div>` : ''}
+      ${nextBtn}`, 'good');
+  } else {
+    openOverlay(`<div class="fb-head">${mascot('think', 92)}<div><h3>${pick(ENCOURAGE)}</h3><span class="sub">Tidak ada poin kali ini. Skor tetap ${G.score}.</span></div></div>
+      <div class="fb-box"><span class="label">Jawaban yang benar</span>${correctAnswerHtml(q)}</div>
+      <div class="fb-box"><span class="label">Cara mendapatkannya</span>${note ? note + '<br>' : ''}${q.explain}</div>
+      ${nextBtn}`, 'bad');
+  }
+}
+
+function nextQuestion() {
+  closeOverlay();
+  if (G.i < G.qs.length - 1) { G.i++; renderQuestion(); window.scrollTo(0, 0); }
+  else finishLevel();
+}
+/* ============================================================
+   Akhir level, hasil, hadiah, penanganan klik, dan start
+   ============================================================ */
+function starsFor(correct, total) {
+  const r = correct / total;
+  return r >= 0.83 ? 3 : r >= 0.66 ? 2 : r >= 0.5 ? 1 : 0;
+}
+
+function finishLevel() {
+  const n = G.level, total = G.qs.length, stars = starsFor(G.correct, total);
+  const old = Save.levelInfo(n);
+  const wasDone = old.stars >= 1, hadNext = n < 6 && Save.isUnlocked(n + 1);
+  const coinsGain = stars >= 1 ? (wasDone ? 0 : 10) + Math.max(0, stars - old.stars) * 10 : 0;
+  const better = G.score >= old.best;
+  Save.data.levels[n] = {
+    stars: Math.max(old.stars, stars), best: Math.max(old.best, G.score),
+    correct: better ? G.correct : old.correct, total, plays: (old.plays || 0) + 1
+  };
+  Save.data.coins += coinsGain;
+  const before = Save.data.badges.slice();
+  BADGES.forEach(b => { if (!Save.data.badges.includes(b.id) && b.test()) Save.data.badges.push(b.id); });
+  const gained = Save.data.badges.filter(id => !before.includes(id));
+  Save.write();
+  go('result', { n, total, stars, coinsGain, gained, newUnlock: n < 6 && stars >= 1 && !hadNext });
+}
+
+SCREENS.result = d => {
+  const L = LEVELS[d.n - 1], pass = d.stars >= 1, allDone = Save.doneCount() === 6 && d.n === 6 && pass;
+  const next = d.n < 6 && pass ? LEVELS[d.n] : null;
+  const msg = d.stars === 3 ? 'Luar biasa! Hampir semua soal kamu jawab benar.' : d.stars === 2 ? 'Bagus sekali! Sedikit lagi bisa mendapat 3 bintang.' : d.stars === 1 ? 'Kamu lulus! Ulangi untuk mendapat bintang lebih banyak.' : `Belum lulus. Butuh minimal ${Math.ceil(d.total / 2)} jawaban benar. Baca materi lagi dan coba kembali!`;
+  return `<div class="card result tint-${L.color}">
+    ${mascot(pass ? 'cheer' : 'think', 130)}
+    <h2>${pass ? 'Level ' + d.n + ' Selesai!' : 'Ayo Coba Lagi!'}</h2>
+    <div class="big-stars" id="big-stars" role="img" aria-label="${d.stars} dari 3 bintang">${[0, 1, 2].map(i => starSvg(i < d.stars)).join('')}</div>
+    <p>${msg}</p>
+    <div class="stat-row">
+      <div class="stat"><b>${G.score}/${d.total * 10}</b><span>Skor level ini</span></div>
+      <div class="stat"><b>${G.correct}/${d.total}</b><span>Jawaban benar</span></div>
+      <div class="stat"><b>+${d.coinsGain}</b><span>Koin baru${pass && d.coinsGain === 0 ? ' (naikkan bintang untuk koin)' : ''}</span></div>
+      <div class="stat"><b>${Save.totalScore()}</b><span>Total skor terbaik</span></div>
+    </div>
+    ${d.newUnlock ? `<div class="fb-box" style="width:100%"><span class="label">Wilayah baru terbuka!</span>${next.region} · Level ${next.id}: ${next.title}</div>` : ''}
+    ${d.gained.length ? `<div style="width:100%"><h3 style="font-size:24px;margin-bottom:8px">Medali baru</h3><div class="new-badges">${d.gained.map(id => badgeHtml(BADGES.find(b => b.id === id), true)).join('')}</div></div>` : ''}
+    ${allDone ? `<div class="trophy-card"><div style="width:80px">${ICON.trophy}</div><h3>Pahlawan Negeri Pecahan!</h3><p>Kamu sudah menaklukkan semua 6 wilayah dengan ${Save.totalStars()} dari 18 bintang. Negeri Pecahan aman berkat kamu!</p></div>` : ''}
+    <div class="action-row" style="justify-content:center">
+      ${next ? `<button class="btn green" data-act="open-level" data-level="${next.id}">Level ${next.id} ${ICON.play}</button>` : ''}
+      <button class="btn ${next ? 'blue' : 'green'}" data-act="retry">${ICON.replay.replace('<svg', '<svg style="width:26px;height:26px"')} Ulangi Level</button>
+      ${pass ? '' : `<button class="btn grape" data-act="open-level" data-level="${d.n}">${ICON.book} Baca Materi</button>`}
+      <button class="btn ghost" data-act="levels">${ICON.map} Peta Level</button>
+      <button class="btn ghost" data-act="recap">${ICON.trophy} Rekap Nilai</button>
+      <button class="btn ghost" data-act="menu">Menu Utama</button>
+    </div>
+  </div>`;
+};
+SCREENS_AFTER.result = d => {
+  const svgs = $$('#big-stars svg');
+  if (d.stars >= 1) Audio_.play('win'); else Audio_.play('wrong');
+  svgs.forEach((s, i) => { if (i < d.stars) setTimeout(() => { s.classList.add('in'); Audio_.play('star'); }, 500 + i * 450); else s.style.opacity = '1', s.style.transform = 'none'; });
+  if (d.stars >= 1) setTimeout(() => confetti(d.stars === 3 ? 70 : 40), 400);
+  if (d.newUnlock) setTimeout(() => Audio_.play('unlock'), 500 + d.stars * 450);
+};
+
+/* ---------- Mencocokkan: gambar ulang status ---------- */
+function renderMatch() {
+  const L = $$('#mcL .mitem'), R = $$('#mcR .mitem');
+  L.forEach(el => { el.removeAttribute('data-c'); el.classList.remove('pick'); el.style.removeProperty('--pc'); const t = $('.tag', el); if (t) t.remove(); });
+  R.forEach(el => { el.removeAttribute('data-c'); el.style.removeProperty('--pc'); const t = $('.tag', el); if (t) t.remove(); });
+  Object.entries(G.cur.map).forEach(([k, pos]) => {
+    const color = PAIR_COLORS[k % PAIR_COLORS.length];
+    [L[k], R[pos]].forEach(el => { el.dataset.c = k; el.style.setProperty('--pc', color); el.insertAdjacentHTML('beforeend', `<span class="tag">${+k + 1}</span>`); });
+  });
+  if (G.cur.selL !== null && G.cur.selL !== undefined) L[G.cur.selL].classList.add('pick');
+  syncCheck();
+}
+
+/* ---------- Penanganan klik ---------- */
+const ACTIONS = {
+  start() { const n = nextLevelToPlay(); if (!Save.data.seenGuide) { Save.data.seenGuide = true; Save.write(); return go('guide'); } if (n) go('lesson', { level: n }); else go('levels'); },
+  guide: () => go('guide'),
+  levels: () => go('levels'),
+  recap: () => go('recap'),
+  menu: () => go('menu'),
+  'open-level'(el) { go('lesson', { level: +el.dataset.level }); },
+  'begin-level'(el) { startLevel(+el.dataset.level); },
+  'lesson-prev': () => lessonStep(-1),
+  'lesson-next': () => lessonStep(1),
+  'show-lesson'() { lessonState.level = G.level; lessonState.i = 0; openOverlay(lessonHtml(LEVELS[G.level - 1], 0, true), 'lesson-modal'); $('#overlay-root .sheet').style.width = 'min(900px,100%)'; },
+  'close-overlay': () => closeOverlay(),
+  'pick-opt'(el) { if (G.locked) return; G.cur.sel = +el.dataset.k; $$('.opt').forEach(o => o.classList.remove('sel')); el.classList.add('sel'); syncCheck(); },
+  'm-left'(el) {
+    if (G.locked) return; const k = +el.dataset.k;
+    if (G.cur.map[k] !== undefined) { delete G.cur.map[k]; G.cur.selL = null; }
+    else G.cur.selL = G.cur.selL === k ? null : k;
+    renderMatch();
+  },
+  'm-right'(el) {
+    if (G.locked) return; const pos = +el.dataset.pos;
+    const owner = Object.keys(G.cur.map).find(k => G.cur.map[k] === pos);
+    if (owner !== undefined) { delete G.cur.map[owner]; }
+    else if (G.cur.selL !== null && G.cur.selL !== undefined) { G.cur.map[G.cur.selL] = pos; G.cur.selL = null; }
+    renderMatch();
+  },
+  'o-add'(el) { if (G.locked) return; G.cur.seq.push(+el.dataset.id); renderOrder(); },
+  'o-remove'(el) { if (G.locked) return; G.cur.seq = G.cur.seq.filter(i => i !== +el.dataset.id); renderOrder(); },
+  check: checkAnswer,
+  'next-q': nextQuestion,
+  'reset-q'() { if (!G.locked) renderQuestion(); },
+  async 'restart-level'() { if (await confirmBox({ title: 'Ulangi level?', text: 'Soal akan diacak ulang dan skor level ini mulai dari nol.', yes: 'Ya, ulangi', no: 'Lanjut bermain' })) startLevel(G.level); },
+  retry: () => startLevel(G.level),
+  async quit() { if (await confirmBox({ title: 'Kembali ke menu?', text: 'Skor level yang sedang berjalan belum tersimpan.', yes: 'Ya, ke menu', no: 'Lanjut bermain' })) go('menu'); },
+  'toggle-music'() { Save.data.settings.music = !Save.data.settings.music; Save.write(); Audio_.syncMusic(); renderToolbar(); },
+  'toggle-sfx'() { Save.data.settings.sfx = !Save.data.settings.sfx; Save.write(); renderToolbar(); },
+  async 'reset-ask'() {
+    if (await confirmBox({ title: 'Hapus semua progres?', text: 'Semua bintang, skor, koin, dan medali akan dihapus. Tindakan ini tidak bisa dibatalkan.', yes: 'Ya, hapus', no: 'Batal' })) {
+      const s = Save.data.settings; Save.reset(); Save.data.settings = s; Save.write(); go('recap'); toast('Progres dihapus. Mulai petualangan baru!');
+    }
+  }
+};
+
+document.addEventListener('click', e => {
+  Audio_.unlock();
+  const cell = e.target.closest('.vis-click .cell');
+  if (cell && !G.locked && UI.current === 'play') { cell.classList.toggle('on'); $('#shade-n').textContent = $$('.vis .cell.on').length; Audio_.play('click'); syncCheck(); return; }
+  const el = e.target.closest('[data-act]');
+  if (!el || el.disabled) return;
+  const act = el.dataset.act;
+  if (!['check', 'toggle-sfx', 'pick-opt'].includes(act)) Audio_.play('click');
+  else if (act === 'pick-opt') Audio_.play('click');
+  if (ACTIONS[act]) ACTIONS[act](el);
+});
+document.addEventListener('keydown', e => {
+  const cell = e.target.closest && e.target.closest('.vis-click .cell');
+  if (cell && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); cell.dispatchEvent(new MouseEvent('click', { bubbles: true })); return; }
+  if (e.key === 'Enter' && UI.current === 'play') {
+    const nb = $('#next-btn');
+    if (nb) { e.preventDefault(); nextQuestion(); return; }
+    if (e.target.matches && e.target.matches('.num-in')) { e.preventDefault(); checkAnswer(); }
+  }
+});
+document.addEventListener('input', e => {
+  if (e.target.matches && e.target.matches('.num-in')) { e.target.value = e.target.value.replace(/\D+/g, ''); syncCheck(); }
+});
+
+/* ---------- Mulai ---------- */
+function boot() {
+  Save.load();
+  go('menu');
+  const once = () => { Audio_.unlock(); window.removeEventListener('pointerdown', once); window.removeEventListener('keydown', once); };
+  window.addEventListener('pointerdown', once);
+  window.addEventListener('keydown', once);
+}
+Object.assign(PNP, { levels: LEVELS, save: Save, go, startLevel, F, eq, simp, val, ACTIONS, starsFor });
+boot();
+</script>
+
+</body></html>
